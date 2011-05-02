@@ -1,5 +1,7 @@
 package mx.edu.um.portlets.eliseo.dao;
 
+import mx.edu.um.portlets.eliseo.model.Salon;
+import mx.edu.um.portlets.eliseo.model.Curso;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +31,7 @@ public class CursoDao {
     private HibernateTemplate hibernateTemplate;
 
     public CursoDao() {
-        log.debug("Nueva instancia del dao de cursos");
+        log.info("Nueva instancia del dao de cursos");
     }
 
     @Autowired
@@ -44,6 +46,8 @@ public class CursoDao {
         Criteria criteria = session.createCriteria(Curso.class);
         if (comunidades != null) {
             criteria.add(Restrictions.in("comunidadId", comunidades));
+        } else {
+            throw new RuntimeException("Se requiere saber la comunidad para hacer el conteo de cursos");
         }
         criteria.setProjection(Projections.rowCount());
         return ((Long) criteria.list().get(0));
@@ -64,6 +68,8 @@ public class CursoDao {
         }
         if (params != null && params.containsKey("comunidades")) {
             criteria.add(Restrictions.in("comunidadId",(Set<Long>)params.get("comunidades")));
+        } else {
+            throw new RuntimeException("Se requiere la comunidad para hacer la busqueda");
         }
         return criteria.list();
     }
@@ -82,18 +88,25 @@ public class CursoDao {
     }
 
     @Transactional(readOnly = true)
-    public Curso obtiene(Long id) {
+    public Curso obtiene(Long id, Set<Long> comunidades) {
         log.debug("Buscando el curso {}", id);
         Curso curso = hibernateTemplate.get(Curso.class, id);
         if (curso == null) {
             throw new RuntimeException("Curso no encontrado");
+        } else if (!comunidades.contains(curso.getComunidadId())) {
+            throw new RuntimeException("No se puede obtener un curso sin que pertenezca a la comunidad");
         }
         return curso;
     }
 
-    public void elimina(Long id) {
+    public void elimina(Long id, Set<Long> comunidades) {
         log.info("Eliminando el curso {}", id);
-        hibernateTemplate.delete(hibernateTemplate.load(Curso.class, id));
+        Curso curso = hibernateTemplate.get(Curso.class, id);
+        if (comunidades.contains(curso.getComunidadId())) {
+            hibernateTemplate.delete(curso);
+        } else {
+            throw new RuntimeException("No se puede eliminar un curso que no pertenezca a tu comunidad");
+        }
     }
 
     public Map lista(Map<String, Object> params) {
@@ -104,6 +117,8 @@ public class CursoDao {
         Criteria criteria = session.createCriteria(Curso.class);
         if (params != null && params.containsKey("comunidades")) {
             criteria.add(Restrictions.in("comunidadId",(Set<Long>)params.get("comunidades")));
+        } else {
+            throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
         criteria.setMaxResults((Integer) params.get("max"));
         criteria.setFirstResult((Integer) params.get("offset"));
@@ -120,6 +135,8 @@ public class CursoDao {
         criteria.add(Restrictions.ge("termina", hoy));
         if (comunidades != null) {
             criteria.createCriteria("curso").add(Restrictions.in("comunidadId", comunidades));
+        } else {
+            throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
         criteria.setProjection(Projections.rowCount());
         Long resultado = (Long) criteria.list().get(0);
@@ -138,6 +155,8 @@ public class CursoDao {
         criteria.add(Restrictions.ge("termina", hoy));
         if (params != null && params.containsKey("comunidades")) {
             criteria.createCriteria("curso").add(Restrictions.in("comunidadId", (Set<Long>)params.get("comunidades")));
+        } else {
+            throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
         criteria.setMaxResults((Integer) params.get("max"));
         criteria.setFirstResult((Integer) params.get("offset"));

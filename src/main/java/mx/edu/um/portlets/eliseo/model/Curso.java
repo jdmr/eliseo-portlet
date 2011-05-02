@@ -1,4 +1,4 @@
-package mx.edu.um.portlets.eliseo.dao;
+package mx.edu.um.portlets.eliseo.model;
 
 import java.io.Serializable;
 import javax.persistence.Column;
@@ -16,11 +16,9 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name="cursos", uniqueConstraints = {@UniqueConstraint(columnNames={"codigo","comunidadId"})})
-@NamedQuery(
-    name="buscaPorFiltro"
-    ,query="select c from Curso c where upper(c.codigo) like :filtro or upper(c.nombre) like :filtro"
-)
+@Table(name = "cursos", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"codigo", "comunidad_id"})})
+@NamedQuery(name = "buscaPorFiltro", query = "select c from Curso c where upper(c.codigo) like :filtro or upper(c.nombre) like :filtro")
 public class Curso implements Serializable {
 
     @Id
@@ -32,9 +30,9 @@ public class Curso implements Serializable {
     private String codigo;
     @Column(length = 128, nullable = false)
     private String nombre;
-    @Column(nullable = false)
+    @Column(name = "comunidad_id", nullable = false)
     private Long comunidadId;
-    @Column(length = 128)
+    @Column(name = "comunidad_nombre", length = 128)
     private String comunidadNombre;
     private String contenidos;
 

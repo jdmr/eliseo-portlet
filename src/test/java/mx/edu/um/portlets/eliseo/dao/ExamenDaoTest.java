@@ -1,5 +1,7 @@
 package mx.edu.um.portlets.eliseo.dao;
 
+import mx.edu.um.portlets.eliseo.model.Examen;
+import mx.edu.um.portlets.eliseo.model.Curso;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

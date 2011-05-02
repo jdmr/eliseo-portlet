@@ -1,4 +1,4 @@
-package mx.edu.um.portlets.eliseo.dao;
+package mx.edu.um.portlets.eliseo.model;
 
 import com.liferay.portal.model.User;
 import java.util.Date;
@@ -33,7 +33,7 @@ public class AlumnoInscrito {
     private String usuario;
     @Column(length = 128, nullable = false)
     private String correo;
-    @Column(length = 200, nullable = false)
+    @Column(name="nombre_completo", length = 200, nullable = false)
     private String nombreCompleto;
     @ManyToOne
     private Salon salon;

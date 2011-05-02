@@ -1,5 +1,6 @@
-package mx.edu.um.portlets.eliseo.dao;
+package mx.edu.um.portlets.eliseo.model;
 
+import mx.edu.um.portlets.eliseo.model.Curso;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

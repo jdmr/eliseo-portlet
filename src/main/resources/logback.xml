@@ -24,10 +24,11 @@
       <FileNamePattern>eliseo.log.%i</FileNamePattern>
     </rollingPolicy>
     <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <MaxFileSize>100KB</MaxFileSize>
+      <MaxFileSize>1MB</MaxFileSize>
     </triggeringPolicy>
   </appender>
   <logger name="mx.edu.um.portlets" level="DEBUG"/>
+  <logger name="org.spingframework" level="DEBUG"/>
   <root level="WARN">
     <appender-ref ref="stdout"/>
     <appender-ref ref="R"/>

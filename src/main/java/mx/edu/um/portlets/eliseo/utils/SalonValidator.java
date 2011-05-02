@@ -1,6 +1,6 @@
-package mx.edu.um.portlets.eliseo.web;
+package mx.edu.um.portlets.eliseo.utils;
 
-import mx.edu.um.portlets.eliseo.dao.Salon;
+import mx.edu.um.portlets.eliseo.model.Salon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

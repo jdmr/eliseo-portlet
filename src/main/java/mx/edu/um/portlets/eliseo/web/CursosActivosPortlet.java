@@ -1,13 +1,10 @@
 package mx.edu.um.portlets.eliseo.web;
 
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import mx.edu.um.portlets.eliseo.utils.SesionVO;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.model.Group;
-import com.liferay.portal.model.GroupConstants;
 import com.liferay.portal.model.User;
-import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.asset.model.AssetEntry;
@@ -20,7 +17,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -28,9 +24,10 @@ import javax.portlet.PortletSession;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import mx.edu.um.portlets.eliseo.dao.CursoDao;
-import mx.edu.um.portlets.eliseo.dao.Salon;
+import mx.edu.um.portlets.eliseo.model.Salon;
 import mx.edu.um.portlets.eliseo.dao.SalonDao;
-import mx.edu.um.portlets.eliseo.dao.Sesion;
+import mx.edu.um.portlets.eliseo.model.Sesion;
+import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
 import mx.edu.um.portlets.eliseo.utils.ZonaHorariaUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -68,7 +65,7 @@ public class CursosActivosPortlet {
             @RequestParam(value = "direccion", required = false) String direccion,
             Model modelo) throws PortalException, SystemException, ParseException {
         log.debug("Lista de cursos");
-        Map<Long, String> comunidades = obtieneComunidades(request);
+        Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
         TimeZone tz = null;
         DateTimeZone zone = null;
         ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
@@ -215,27 +212,6 @@ public class CursosActivosPortlet {
             resultado = "cursosActivos/login";
         }
         return resultado;
-    }
-
-    private Map<Long, String> obtieneComunidades(RenderRequest request) throws SystemException {
-        ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
-        List types = new ArrayList();
-
-        types.add(new Integer(GroupConstants.TYPE_COMMUNITY_OPEN));
-        types.add(new Integer(GroupConstants.TYPE_COMMUNITY_RESTRICTED));
-        types.add(new Integer(GroupConstants.TYPE_COMMUNITY_PRIVATE));
-
-        LinkedHashMap groupParams = new LinkedHashMap();
-        groupParams.put("types", types);
-        groupParams.put("active", Boolean.TRUE);
-
-        List<Group> comunidadesList = GroupLocalServiceUtil.search(themeDisplay.getCompanyId(), null, null, groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-        Map<Long, String> comunidades = new LinkedHashMap<Long, String>();
-        for (Group group : comunidadesList) {
-            comunidades.put(group.getGroupId(), group.getName());
-        }
-
-        return comunidades;
     }
 
 }

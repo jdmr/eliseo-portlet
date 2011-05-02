@@ -1,7 +1,8 @@
-package mx.edu.um.portlets.eliseo.dao;
+package mx.edu.um.portlets.eliseo.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,8 +26,10 @@ public class Sesion implements Serializable {
     private Integer version;
     private Integer dia;
     @Temporal(javax.persistence.TemporalType.TIME)
+    @Column(name="hora_inicial")
     private Date horaInicial;
     @Temporal(javax.persistence.TemporalType.TIME)
+    @Column(name="hora_final")
     private Date horaFinal;
     @ManyToOne
     private Salon salon;

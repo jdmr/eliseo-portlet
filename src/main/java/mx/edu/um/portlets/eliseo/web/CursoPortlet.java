@@ -1,14 +1,13 @@
 package mx.edu.um.portlets.eliseo.web;
 
+import mx.edu.um.portlets.eliseo.utils.CursoValidator;
 import mx.edu.um.portlets.eliseo.dao.CursoDao;
-import mx.edu.um.portlets.eliseo.dao.Curso;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import mx.edu.um.portlets.eliseo.model.Curso;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.servlet.ImageServletTokenUtil;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
@@ -18,12 +17,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.model.Group;
-import com.liferay.portal.model.GroupConstants;
-import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.User;
 import com.liferay.portal.service.GroupLocalServiceUtil;
-import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.theme.ThemeDisplay;
@@ -51,7 +46,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.portlet.ActionRequest;
@@ -59,8 +53,9 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import mx.edu.um.portlets.eliseo.dao.Examen;
+import mx.edu.um.portlets.eliseo.model.Examen;
 import mx.edu.um.portlets.eliseo.dao.ExamenDao;
+import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +89,7 @@ public class CursoPortlet {
     private Examen examen;
 
     public CursoPortlet() {
-        log.debug("Nueva instancia del portlet de cursos");
+        log.info("Nueva instancia del portlet de cursos");
     }
 
     @InitBinder
@@ -123,7 +118,7 @@ public class CursoPortlet {
         log.debug("Lista de cursos");
         curso = null;
         User user = PortalUtil.getUser(request);
-        Map<Long, String> comunidades = obtieneComunidades(request);
+        Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
         Long total = cursoDao.cantidad(comunidades.keySet());
         modelo.addAttribute("cantidad", total);
 
@@ -152,18 +147,18 @@ public class CursoPortlet {
     }
 
     @RequestMapping(params = "action=nuevo")
-    public String nuevo(RenderRequest request, Model model) throws SystemException {
+    public String nuevo(RenderRequest request, Model model) throws SystemException, PortalException {
         log.debug("Nuevo curso");
         curso = new Curso();
         model.addAttribute("curso", curso);
-        model.addAttribute("comunidades", obtieneComunidades(request));
+        model.addAttribute("comunidades", ComunidadUtil.obtieneComunidades(request));
         return "curso/nuevo";
     }
 
     @RequestMapping(params = "action=nuevoError")
-    public String nuevoError(RenderRequest request, Model model) throws SystemException {
+    public String nuevoError(RenderRequest request, Model model) throws SystemException, PortalException {
         log.debug("Hubo algun error y regresamos a editar el nuevo curso");
-        model.addAttribute("comunidades", obtieneComunidades(request));
+        model.addAttribute("comunidades", ComunidadUtil.obtieneComunidades(request));
         return "curso/nuevo";
     }
 
@@ -186,9 +181,9 @@ public class CursoPortlet {
     }
 
     @RequestMapping(params = "action=edita")
-    public String edita(RenderRequest request, @RequestParam("cursoId") Long id, Model model) throws SystemException {
+    public String edita(RenderRequest request, @RequestParam("cursoId") Long id, Model model) throws SystemException, PortalException {
         log.debug("Edita curso");
-        model.addAttribute("curso", cursoDao.obtiene(id));
+        model.addAttribute("curso", cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet()));
         return "curso/edita";
     }
 
@@ -221,7 +216,7 @@ public class CursoPortlet {
         log.debug("Buscando curso");
         curso = null;
         User user = PortalUtil.getUser(request);
-        Map<Long, String> comunidades = obtieneComunidades(request);
+        Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
         modelo.addAttribute("cantidad", cursoDao.cantidad(comunidades.keySet()));
         log.debug(filtro);
         Map<String, Object> params = new HashMap<String, Object>();
@@ -237,7 +232,7 @@ public class CursoPortlet {
     @RequestMapping(params = "action=ver")
     public String ver(RenderRequest request, @RequestParam("cursoId") Long id, Model model) throws PortalException, SystemException {
         log.debug("Ver curso");
-        curso = cursoDao.obtiene(id);
+        curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
         model.addAttribute("curso", curso);
         List contenidos = new ArrayList();
         String[] lista = StringUtil.split(curso.getContenidos());
@@ -259,92 +254,65 @@ public class CursoPortlet {
     @RequestMapping(params = "action=elimina")
     public void elimina(ActionRequest request, ActionResponse response,
             @ModelAttribute("curso") Curso curso, BindingResult result,
-            Model model, SessionStatus sessionStatus, @RequestParam("cursoId") Long id) {
+            Model model, SessionStatus sessionStatus, @RequestParam("cursoId") Long id) throws PortalException, SystemException {
         log.debug("Elimina curso " + id);
-        cursoDao.elimina(id);
+        cursoDao.elimina(id, ComunidadUtil.obtieneComunidades(request).keySet());
         sessionStatus.setComplete();
     }
 
-    private Map<Long, String> obtieneComunidades(RenderRequest request) throws SystemException {
-        ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
-        List types = new ArrayList();
-
-        types.add(new Integer(GroupConstants.TYPE_COMMUNITY_OPEN));
-        types.add(new Integer(GroupConstants.TYPE_COMMUNITY_RESTRICTED));
-        types.add(new Integer(GroupConstants.TYPE_COMMUNITY_PRIVATE));
-
-        LinkedHashMap groupParams = new LinkedHashMap();
-        groupParams.put("types", types);
-        groupParams.put("active", Boolean.TRUE);
-
-        List<Group> comunidadesList = GroupLocalServiceUtil.search(themeDisplay.getCompanyId(), null, null, groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-        Map<Long, String> comunidades = new LinkedHashMap<Long, String>();
-        for (Group group : comunidadesList) {
-            comunidades.put(group.getGroupId(), group.getName());
-        }
-
-        return comunidades;
-    }
-
     @RequestMapping(params = "action=contenido")
-    public String contenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long id, Model model) throws SystemException {
+    public String contenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long id, Model model) throws SystemException, PortalException {
         log.debug("Edita contenido");
-        curso = cursoDao.obtiene(id);
+        curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
         model.addAttribute("curso", curso);
 
         ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
-        PortletPreferences preferences = request.getPreferences();
-        String portletResource = ParamUtil.getString(request, "portletResource");
 
-        if (Validator.isNotNull(portletResource)) {
-            preferences = PortletPreferencesFactoryUtil.getPortletSetup(request, portletResource);
-        }
-
-        long scopeGroupId = themeDisplay.getScopeGroupId();
-
-        long[] availableClassNameIds = AssetRendererFactoryRegistryUtil.getClassNameIds();
-
-        // Metodo copiado del AssetPublisherUtil
-        long[] classNameIds = getClassNameIds(preferences, availableClassNameIds);
 
         try {
+            long scopeGroupId = themeDisplay.getScopeGroupId();
+
             AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
-            String[] allAssetTagNames = new String[]{curso.getCodigo().toLowerCase()};
-            assetEntryQuery = getAssetEntryQuery(preferences, scopeGroupId);
+            // Busca el contenido del dia
+            String[] tags = new String[]{curso.getCodigo().toLowerCase()};
 
-            long[] assetTagIds = AssetTagLocalServiceUtil.getTagIds(scopeGroupId, allAssetTagNames);
+            long[] assetTagIds = AssetTagLocalServiceUtil.getTagIds(scopeGroupId, tags);
+            log.debug("AssetTagIds {}", assetTagIds);
 
-            assetEntryQuery.setAllTagIds(assetTagIds);
-
-            List disponibles = new ArrayList();
-            List seleccionados = new ArrayList();
-
-            for (long classNameId : classNameIds) {
-                long[] groupClassNameIds = {classNameId};
-
-                assetEntryQuery.setClassNameIds(groupClassNameIds);
+            if (assetTagIds.length > 0) {
+                assetEntryQuery.setAnyTagIds(assetTagIds);
 
                 List<AssetEntry> results = AssetEntryServiceUtil.getEntries(assetEntryQuery);
 
+                List disponibles = new ArrayList();
+                List seleccionados = new ArrayList();
+
+                String[] contenidos = StringUtil.split(curso.getContenidos());
+                String contenidoId;
+
+                boolean contieneContenido;
                 for (AssetEntry asset : results) {
-                    log.debug("Asset: " + asset.getTitle() + " : " + asset.getDescription() + " : " + asset.getMimeType() + " : " + asset.getClassName());
-                    disponibles.add(new KeyValuePair(new Long(asset.getPrimaryKey()).toString(), asset.getTitle()));
+                    contieneContenido = false;
+                    contenidoId = new Long(asset.getPrimaryKey()).toString();
+                    for (String key : contenidos) {
+                        if (key.equals(contenidoId)) {
+                            contieneContenido = true;
+                            break;
+                        }
+                    }
+                    if (contieneContenido) {
+                        seleccionados.add(new KeyValuePair(contenidoId, asset.getTitle()));
+                    } else {
+                        disponibles.add(new KeyValuePair(contenidoId, asset.getTitle()));
+                    }
                 }
 
-            }
-            
-            Map<String, Object> params = new HashMap<String, Object>();
-            List<Long> communities = new ArrayList<Long>();
-            communities.add(scopeGroupId);
-            params.put("communities", communities);
-            List<Examen> examenes = examenDao.busca(params);
-            for(Examen examen : examenes) {
-                disponibles.add(new KeyValuePair("E"+examen.getId(), examen.getCodigo()));
+                model.addAttribute("disponibles", disponibles);
+                model.addAttribute("seleccionados", seleccionados);
+
             }
 
-            model.addAttribute("disponibles", disponibles);
-            model.addAttribute("seleccionados", seleccionados);
 
         } catch (Exception e) {
             log.error("No se pudo cargar el contenido", e);
@@ -357,7 +325,7 @@ public class CursoPortlet {
     @RequestMapping(params = "action=actualizaContenido")
     public void actualizaContenido(ActionRequest request, ActionResponse response,
             @ModelAttribute("curso") Curso curso, BindingResult result,
-            Model model, SessionStatus sessionStatus, @RequestParam("cursoId") Long id, @RequestParam("seleccionados") String seleccionados) {
+            Model model, SessionStatus sessionStatus, @RequestParam("cursoId") Long id, @RequestParam("seleccionados") String seleccionados) throws SystemException, PortalException {
         log.debug("Actualizando contenido");
         log.debug("CursoId: {} | Contenidos: ", new Object[]{id, seleccionados});
         if (seleccionados.length() == 0) {
@@ -366,7 +334,7 @@ public class CursoPortlet {
             seleccionados = StringUtil.merge(contenidoSeleccionado);
         }
 
-        curso = cursoDao.obtiene(id);
+        curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
 
         curso.setContenidos(seleccionados);
 
@@ -377,9 +345,9 @@ public class CursoPortlet {
     }
 
     @RequestMapping(params = "action=verContenido")
-    public String verContenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long cursoId, @RequestParam("contenidoId") Long contenidoId, Model model) {
+    public String verContenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long cursoId, @RequestParam("contenidoId") Long contenidoId, Model model) throws SystemException, PortalException {
         log.debug("Ver contenido");
-        curso = cursoDao.obtiene(cursoId);
+        curso = cursoDao.obtiene(cursoId, ComunidadUtil.obtieneComunidades(request).keySet());
         model.addAttribute("curso", curso);
         model.addAttribute("contenidoId", contenidoId);
         ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
@@ -430,7 +398,8 @@ public class CursoPortlet {
                 model.addAttribute("documentURL", fileUrl);
 
                 log.debug("NAME: {}", fileEntry.getTitle());
-                if (fileEntry.getTitle().endsWith("flv")) {
+                if (contenido.getMimeType().startsWith("video")
+                        || contenido.getMimeType().equals("application/x-shockwave-flash")) {
                     model.addAttribute("video", true);
                 }
                 int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(DLFileEntry.class.getName()),
@@ -446,188 +415,7 @@ public class CursoPortlet {
 
         return "curso/verContenido";
     }
-
-    public static AssetEntryQuery getAssetEntryQuery(
-            PortletPreferences preferences, long scopeGroupId)
-            throws Exception {
-
-        AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
-
-        long[] allAssetCategoryIds = new long[0];
-        long[] anyAssetCategoryIds = new long[0];
-        long[] notAllAssetCategoryIds = new long[0];
-        long[] notAnyAssetCategoryIds = new long[0];
-
-        String[] allAssetTagNames = new String[0];
-        String[] anyAssetTagNames = new String[0];
-        String[] notAllAssetTagNames = new String[0];
-        String[] notAnyAssetTagNames = new String[0];
-
-        for (int i = 0; true; i++) {
-            String[] queryValues = preferences.getValues(
-                    "queryValues" + i, null);
-
-            if ((queryValues == null) || (queryValues.length == 0)) {
-                break;
-            }
-
-            boolean queryContains = GetterUtil.getBoolean(
-                    preferences.getValue("queryContains" + i, StringPool.BLANK));
-            boolean queryAndOperator = GetterUtil.getBoolean(
-                    preferences.getValue("queryAndOperator" + i, StringPool.BLANK));
-            String queryName = preferences.getValue(
-                    "queryName" + i, StringPool.BLANK);
-
-            if (Validator.equals(queryName, "assetCategories")) {
-                long[] assetCategoryIds = GetterUtil.getLongValues(queryValues);
-
-                if (queryContains && queryAndOperator) {
-                    allAssetCategoryIds = assetCategoryIds;
-                } else if (queryContains && !queryAndOperator) {
-                    anyAssetCategoryIds = assetCategoryIds;
-                } else if (!queryContains && queryAndOperator) {
-                    notAllAssetCategoryIds = assetCategoryIds;
-                } else {
-                    notAnyAssetCategoryIds = assetCategoryIds;
-                }
-            } else {
-                if (queryContains && queryAndOperator) {
-                    allAssetTagNames = queryValues;
-                } else if (queryContains && !queryAndOperator) {
-                    anyAssetTagNames = queryValues;
-                } else if (!queryContains && queryAndOperator) {
-                    notAllAssetTagNames = queryValues;
-                } else {
-                    notAnyAssetTagNames = queryValues;
-                }
-            }
-        }
-
-        long[] allAssetTagIds = AssetTagLocalServiceUtil.getTagIds(
-                scopeGroupId, allAssetTagNames);
-        long[] anyAssetTagIds = AssetTagLocalServiceUtil.getTagIds(
-                scopeGroupId, anyAssetTagNames);
-        long[] notAllAssetTagIds = AssetTagLocalServiceUtil.getTagIds(
-                scopeGroupId, notAllAssetTagNames);
-        long[] notAnyAssetTagIds = AssetTagLocalServiceUtil.getTagIds(
-                scopeGroupId, notAnyAssetTagNames);
-
-        assetEntryQuery.setAllCategoryIds(allAssetCategoryIds);
-        assetEntryQuery.setAllTagIds(allAssetTagIds);
-        assetEntryQuery.setAnyCategoryIds(anyAssetCategoryIds);
-        assetEntryQuery.setAnyTagIds(anyAssetTagIds);
-        assetEntryQuery.setNotAllCategoryIds(notAllAssetCategoryIds);
-        assetEntryQuery.setNotAllTagIds(notAllAssetTagIds);
-        assetEntryQuery.setNotAnyCategoryIds(notAnyAssetCategoryIds);
-        assetEntryQuery.setNotAnyTagIds(notAnyAssetTagIds);
-
-        return assetEntryQuery;
-    }
-
-    public static String[] getAssetTagNames(
-            PortletPreferences preferences, long scopeGroupId)
-            throws Exception {
-
-        String[] allAssetTagNames = new String[0];
-
-        for (int i = 0; true; i++) {
-            String[] queryValues = preferences.getValues(
-                    "queryValues" + i, null);
-
-            if ((queryValues == null) || (queryValues.length == 0)) {
-                break;
-            }
-
-            boolean queryContains = GetterUtil.getBoolean(
-                    preferences.getValue("queryContains" + i, StringPool.BLANK));
-            boolean queryAndOperator = GetterUtil.getBoolean(
-                    preferences.getValue("queryAndOperator" + i, StringPool.BLANK));
-            String queryName = preferences.getValue(
-                    "queryName" + i, StringPool.BLANK);
-
-            if (!Validator.equals(queryName, "assetCategories")
-                    && queryContains && queryAndOperator) {
-
-                allAssetTagNames = queryValues;
-            }
-        }
-
-        return allAssetTagNames;
-    }
-
-    public static long[] getClassNameIds(
-            PortletPreferences preferences, long[] availableClassNameIds) {
-
-        boolean anyAssetType = GetterUtil.getBoolean(
-                preferences.getValue("any-asset-type", Boolean.TRUE.toString()));
-
-        long[] classNameIds = null;
-
-        if (!anyAssetType
-                && (preferences.getValues("class-name-ids", null) != null)) {
-
-            classNameIds = GetterUtil.getLongValues(
-                    preferences.getValues("class-name-ids", null));
-        } else {
-            classNameIds = availableClassNameIds;
-        }
-
-        return classNameIds;
-    }
-
-    public static long[] getGroupIds(
-            PortletPreferences preferences, long scopeGroupId, Layout layout) {
-
-        long[] groupIds = new long[]{scopeGroupId};
-
-        boolean defaultScope = GetterUtil.getBoolean(
-                preferences.getValue("default-scope", null), true);
-
-        if (!defaultScope) {
-            String[] scopeIds = preferences.getValues(
-                    "scope-ids",
-                    new String[]{"group" + StringPool.UNDERLINE + scopeGroupId});
-
-            groupIds = new long[scopeIds.length];
-
-            for (int i = 0; i < scopeIds.length; i++) {
-                try {
-                    String[] scopeIdFragments = StringUtil.split(
-                            scopeIds[i], StringPool.UNDERLINE);
-
-                    if (scopeIdFragments[0].equals("Layout")) {
-                        long scopeIdLayoutId = GetterUtil.getLong(
-                                scopeIdFragments[1]);
-
-                        Layout scopeIdLayout =
-                                LayoutLocalServiceUtil.getLayout(
-                                scopeGroupId, layout.isPrivateLayout(),
-                                scopeIdLayoutId);
-
-                        Group scopeIdGroup = scopeIdLayout.getScopeGroup();
-
-                        groupIds[i] = scopeIdGroup.getGroupId();
-                    } else {
-                        if (scopeIdFragments[1].equals(
-                                GroupConstants.DEFAULT)) {
-
-                            groupIds[i] = scopeGroupId;
-                        } else {
-                            long scopeIdGroupId = GetterUtil.getLong(
-                                    scopeIdFragments[1]);
-
-                            groupIds[i] = scopeIdGroupId;
-                        }
-                    }
-                } catch (Exception e) {
-                    continue;
-                }
-            }
-        }
-
-        return groupIds;
-    }
-
+    
     @RequestMapping(params = "action=discusion")
     public void discusion(ActionRequest request, ActionResponse response,
             @ModelAttribute("curso") Curso curso, BindingResult result,
@@ -720,9 +508,9 @@ public class CursoPortlet {
             RenderRequest request, 
             RenderResponse response, 
             @RequestParam("cursoId") Long cursoId, 
-            Model model) {
+            Model model) throws PortalException, SystemException {
         
-        curso = cursoDao.obtiene(cursoId);
+        curso = cursoDao.obtiene(cursoId, ComunidadUtil.obtieneComunidades(request).keySet());
         examen = new Examen();
         examen.setCurso(curso);
         model.addAttribute("curso", curso);
@@ -737,7 +525,7 @@ public class CursoPortlet {
             Model model, SessionStatus sessionStatus) throws PortalException, SystemException {
         
         log.debug("Creando el examen");
-        examen.setCurso(cursoDao.obtiene(examen.getCurso().getId()));
+        examen.setCurso(cursoDao.obtiene(examen.getCurso().getId(), ComunidadUtil.obtieneComunidades(request).keySet()));
         examen = examenDao.crea(examen);
         
         response.setRenderParameter("action", "ver");

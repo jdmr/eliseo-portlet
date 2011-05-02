@@ -1,5 +1,6 @@
-package mx.edu.um.portlets.eliseo.dao;
+package mx.edu.um.portlets.eliseo.model;
 
+import mx.edu.um.portlets.eliseo.model.Curso;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -31,7 +32,9 @@ public class Salon implements Serializable {
     private String nombre;
     @ManyToOne
     private Curso curso;
+    @Column(name="maestro_id")
     private Long maestroId;
+    @Column(name="maestro_nombre")
     private String maestroNombre;
     @Temporal(javax.persistence.TemporalType.DATE)
     private Date inicia;

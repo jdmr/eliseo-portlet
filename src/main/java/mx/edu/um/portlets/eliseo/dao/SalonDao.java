@@ -1,5 +1,8 @@
 package mx.edu.um.portlets.eliseo.dao;
 
+import mx.edu.um.portlets.eliseo.model.Sesion;
+import mx.edu.um.portlets.eliseo.model.Salon;
+import mx.edu.um.portlets.eliseo.model.AlumnoInscrito;
 import com.liferay.portal.model.User;
 import java.util.Date;
 import java.util.List;

@@ -1,8 +1,8 @@
-package mx.edu.um.portlets.eliseo.web;
+package mx.edu.um.portlets.eliseo.utils;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import mx.edu.um.portlets.eliseo.dao.Sesion;
+import mx.edu.um.portlets.eliseo.model.Sesion;
 
 /**
  *
