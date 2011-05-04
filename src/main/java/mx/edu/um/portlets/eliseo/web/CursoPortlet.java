@@ -14,7 +14,6 @@ import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.User;
@@ -23,8 +22,6 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.service.AssetEntryServiceUtil;
 import com.liferay.portlet.asset.service.AssetTagLocalServiceUtil;
@@ -50,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import mx.edu.um.portlets.eliseo.model.Examen;
@@ -60,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -87,6 +84,9 @@ public class CursoPortlet {
     @Autowired
     private ExamenDao examenDao;
     private Examen examen;
+    
+    @Autowired
+    private MessageSource messageSource;
 
     public CursoPortlet() {
         log.info("Nueva instancia del portlet de cursos");
@@ -115,34 +115,38 @@ public class CursoPortlet {
             @RequestParam(value = "max", required = false) Integer max,
             @RequestParam(value = "direccion", required = false) String direccion,
             Model modelo) throws PortalException, SystemException {
-        log.debug("Lista de cursos");
-        curso = null;
-        User user = PortalUtil.getUser(request);
-        Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
-        Long total = cursoDao.cantidad(comunidades.keySet());
-        modelo.addAttribute("cantidad", total);
+        if (request.isUserInRole("Administrator")) {
+            log.debug("Lista de cursos");
+            curso = null;
+            User user = PortalUtil.getUser(request);
+            Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
+            Long total = cursoDao.cantidad(comunidades.keySet());
+            modelo.addAttribute("cantidad", total);
 
-        if (max == null) {
-            max = new Integer(5);
+            if (max == null) {
+                max = new Integer(5);
+            }
+            if (offset == null) {
+                offset = new Integer(0);
+            } else if (direccion.equals("siguiente") && (offset + max) <= total) {
+                offset = offset + max;
+            } else if (direccion.equals("anterior") && offset > 0) {
+                offset = offset - max;
+            }
+
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("max", max);
+            params.put("offset", offset);
+            params.put("comunidades",comunidades.keySet());
+
+            params = cursoDao.lista(params);
+            modelo.addAttribute("cursos", params.get("cursos"));
+            modelo.addAttribute("max", max);
+            modelo.addAttribute("offset", offset);
+        } else {
+            ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+            throw new RuntimeException(messageSource.getMessage("permisos.administrador", null, themeDisplay.getLocale()));
         }
-        if (offset == null) {
-            offset = new Integer(0);
-        } else if (direccion.equals("siguiente") && (offset + max) <= total) {
-            offset = offset + max;
-        } else if (direccion.equals("anterior") && offset > 0) {
-            offset = offset - max;
-        }
-
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("max", max);
-        params.put("offset", offset);
-        params.put("comunidades",comunidades.keySet());
-
-        params = cursoDao.lista(params);
-        modelo.addAttribute("cursos", params.get("cursos"));
-        modelo.addAttribute("max", max);
-        modelo.addAttribute("offset", offset);
-
         return "curso/lista";
     }
 

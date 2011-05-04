@@ -15,6 +15,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -181,9 +183,10 @@ public class SalonDao {
     }
 
     public Boolean existeSesionActiva(Long salonId, Integer dia, Date hora) {
+        log.debug("existeSesionActiva: {} {} {}", new Object[] {salonId, dia, hora});
         boolean resultado = false;
         Session session = hibernateTemplate.getSessionFactory().openSession();
-        Query query = session.createQuery("select sesion from Sesion sesion where sesion.salon.id = :salonId and sesion.dia = :dia and sesion.horaInicial <= :hora and sesion.horaFinal >= :hora");
+        Query query = session.createQuery("select sesion from Sesion sesion where sesion.salon.id = :salonId and sesion.dia = :dia and :hora between sesion.horaInicial and sesion.horaFinal");
         query.setParameter("salonId", salonId);
         query.setParameter("dia", dia);
         query.setParameter("hora", hora);

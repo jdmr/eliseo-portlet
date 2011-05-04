@@ -16,6 +16,7 @@ import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,6 +55,8 @@ public class CursosActivosPortlet {
     @Autowired
     private SalonDao salonDao;
     private Salon salon;
+    @Autowired
+    private MessageSource messageSource;
 
     public CursosActivosPortlet() {
         log.info("Nueva instancia del portlet de cursos activos");
@@ -106,7 +110,7 @@ public class CursosActivosPortlet {
 
     @RequestMapping(params = "action=ver")
     public String ver(RenderRequest request, @RequestParam("salonId") Long id, Model model) throws PortalException, SystemException, ParseException {
-        log.debug("Ver salon");
+        log.debug("Ver curso activo");
         salon = salonDao.obtiene(id);
         model.addAttribute("salon", salon);
 
@@ -124,21 +128,16 @@ public class CursosActivosPortlet {
         if (user != null) {
             log.debug("Usuario {}", user);
             Boolean estaInscrito = salonDao.estaInscrito(id, user.getPrimaryKey());
+            log.debug("Esta inscrito {}",estaInscrito);
             if (estaInscrito) {
                 model.addAttribute("estaInscrito", true);
                 // validar si es hora de entrar a alguna sesion en vivo
-                TimeZone tz = null;
-                DateTimeZone zone = null;
-                try {
-                    tz = themeDisplay.getTimeZone();
-                    zone = DateTimeZone.forID(tz.getID());
-                } catch (IllegalArgumentException e) {
-                    zone = DateTimeZone.forID(ZonaHorariaUtil.getConvertedId(tz.getID()));
-                }
-                DateTime hoy = new DateTime(zone);
-
                 sdf = new SimpleDateFormat("HH:mm");
-                Boolean existeSesionActiva = salonDao.existeSesionActiva(id, hoy.getDayOfWeek(), sdf.parse(hoy.toString("HH:mm")));
+                sdf.setTimeZone(themeDisplay.getTimeZone());
+                String hora = sdf.format(new Date());
+                Date hoy = sdf.parse(hora);
+                Boolean existeSesionActiva = salonDao.existeSesionActiva(id, hoy.getDay(), hoy);
+                log.debug("Hay sesion activa {}",existeSesionActiva);
                 if (existeSesionActiva) {
                     model.addAttribute("salonUrl", salon.getUrl());
                 }
@@ -183,7 +182,7 @@ public class CursosActivosPortlet {
                     salon = salonDao.obtiene(id);
 
                     // Busca el contenido del dia
-                    String[] tags = new String[] {salon.getNombre().toLowerCase(),"inscripcion"};
+                    String[] tags = new String[] {salon.getNombre().toLowerCase(),messageSource.getMessage("curso.codigo", null, themeDisplay.getLocale())};
 
                     long[] assetTagIds = AssetTagLocalServiceUtil.getTagIds(scopeGroupId, tags);
 

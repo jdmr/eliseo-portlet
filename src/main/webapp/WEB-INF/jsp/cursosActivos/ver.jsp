@@ -82,8 +82,8 @@
     <div class="nav">
         <c:choose>
             <c:when test="${estaInscrito}">
-                <c:if test="${salonUrl}">
-                    <span class="menuButton"><a class="edit" href="${salonUrl}"><liferay-ui:message key="salon.entrar" /></a></span>
+                <c:if test="${salonUrl != null}">
+                    <span class="menuButton"><a class="edit" href="${salonUrl}" target="_blank"><liferay-ui:message key="salon.entrar" /></a></span>
                 </c:if>
                 <portlet:renderURL var="contenidoUrl" >
                     <portlet:param name="action" value="contenido" />

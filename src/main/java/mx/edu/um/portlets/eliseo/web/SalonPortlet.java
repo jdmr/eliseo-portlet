@@ -91,31 +91,36 @@ public class SalonPortlet {
             @RequestParam(value = "direccion", required = false) String direccion,
             Model modelo) throws SystemException, PortalException {
 
-        log.debug("Mostrando lista de salones");
-        Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
-        Long total = salonDao.cantidad(comunidades.keySet());
-        modelo.addAttribute("cantidad", total);
+        if (request.isUserInRole("Administrator")) {
+            log.debug("Mostrando lista de salones");
+            Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
+            Long total = salonDao.cantidad(comunidades.keySet());
+            modelo.addAttribute("cantidad", total);
 
-        if (max == null) {
-            max = new Integer(5);
+            if (max == null) {
+                max = new Integer(5);
+            }
+            if (offset == null) {
+                offset = new Integer(0);
+            } else if (direccion.equals("siguiente") && (offset + max) <= total) {
+                offset = offset + max;
+            } else if (direccion.equals("anterior") && offset > 0) {
+                offset = offset - max;
+            }
+
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("max", max);
+            params.put("offset", offset);
+            params.put("comunidades", comunidades.keySet());
+
+            params = salonDao.lista(params);
+            modelo.addAttribute("salones", params.get("salones"));
+            modelo.addAttribute("max", max);
+            modelo.addAttribute("offset", offset);
+        } else {
+            ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+            throw new RuntimeException(messageSource.getMessage("permisos.administrador", null, themeDisplay.getLocale()));
         }
-        if (offset == null) {
-            offset = new Integer(0);
-        } else if (direccion.equals("siguiente") && (offset + max) <= total) {
-            offset = offset + max;
-        } else if (direccion.equals("anterior") && offset > 0) {
-            offset = offset - max;
-        }
-
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("max", max);
-        params.put("offset", offset);
-        params.put("comunidades",comunidades.keySet());
-
-        params = salonDao.lista(params);
-        modelo.addAttribute("salones", params.get("salones"));
-        modelo.addAttribute("max", max);
-        modelo.addAttribute("offset", offset);
 
         return "salon/lista";
     }
@@ -412,17 +417,17 @@ public class SalonPortlet {
 
     @RequestMapping(params = "action=alumnos")
     public String alumnos(RenderRequest request, @RequestParam Long salonId, Model model) {
-        log.debug("Mostrando alumnos de salon {}",salonId);
+        log.debug("Mostrando alumnos de salon {}", salonId);
         salon = salonDao.obtiene(salonId);
-        
+
         List<AlumnoInscrito> alumnos = salonDao.getAlumnos(salon);
-        
-        model.addAttribute("salon",salon);
-        model.addAttribute("alumnos",alumnos);
-        
+
+        model.addAttribute("salon", salon);
+        model.addAttribute("alumnos", alumnos);
+
         return "salon/alumnos";
     }
-    
+
     @ResourceMapping(value = "buscaAlumno")
     public void buscaAlumno(@RequestParam("term") String alumnoNombre, ResourceRequest request, ResourceResponse response) throws IOException, SystemException {
         log.debug("Buscando alumnos que contengan {}", alumnoNombre);
@@ -445,10 +450,10 @@ public class SalonPortlet {
     }
 
     @ResourceMapping(value = "asignaAlumno")
-    public void asignaAlumno(@RequestParam Long alumnoId, 
-                             @RequestParam Long salonId, 
-                             @RequestParam String url,
-                             ResourceRequest request, ResourceResponse response) throws IOException, SystemException, PortalException {
+    public void asignaAlumno(@RequestParam Long alumnoId,
+            @RequestParam Long salonId,
+            @RequestParam String url,
+            ResourceRequest request, ResourceResponse response) throws IOException, SystemException, PortalException {
         log.debug("Asignando alumno {}", alumnoId);
         ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
         StringBuilder sb = new StringBuilder();
@@ -456,7 +461,7 @@ public class SalonPortlet {
         salon = salonDao.obtiene(salonId);
         salonDao.agregaAlumno(salon, user);
         List<AlumnoInscrito> alumnos = salonDao.getAlumnos(salon);
-        
+
         sb.append("<table><thead><tr>");
         sb.append("<th>");
         sb.append(messageSource.getMessage("usuario.nombre", null, themeDisplay.getLocale()));
@@ -465,8 +470,8 @@ public class SalonPortlet {
         sb.append("</th><th>").append(messageSource.getMessage("acciones", null, themeDisplay.getLocale())).append("</th>");
         sb.append("</tr></thead>");
         sb.append("<tbody>");
-        for(AlumnoInscrito alumno : alumnos) {
-            String nuevaUrl = url + "&_Salones_WAR_eliseoportlet_alumnoId="+alumno.getId();
+        for (AlumnoInscrito alumno : alumnos) {
+            String nuevaUrl = url + "&_Salones_WAR_eliseoportlet_alumnoId=" + alumno.getId();
             sb.append("<tr><td>");
             sb.append(alumno.getNombreCompleto());
             sb.append("</td><td>");
@@ -492,12 +497,10 @@ public class SalonPortlet {
         log.debug("Dando de baja a alumno inscrito {} ", alumnoId);
 
         Long salonId = salonDao.eliminaAlumno(alumnoId);
-        
+
         sessionStatus.setComplete();
         response.setRenderParameter("action", "alumnos");
         response.setRenderParameter("salonId", salonId.toString());
 
     }
-
-    
 }
