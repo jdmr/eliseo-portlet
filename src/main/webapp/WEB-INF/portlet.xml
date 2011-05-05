@@ -29,6 +29,9 @@
         <security-role-ref>
             <role-name>administrator</role-name>
         </security-role-ref>
+        <security-role-ref>
+            <role-name>cursos-admin</role-name>
+        </security-role-ref>
     </portlet>
     <portlet>
         <description>Salones</description>
@@ -53,6 +56,9 @@
         <security-role-ref>
             <role-name>administrator</role-name>
         </security-role-ref>
+        <security-role-ref>
+            <role-name>cursos-admin</role-name>
+        </security-role-ref>
     </portlet>
     <portlet>
         <description>Cursos Activos</description>
@@ -76,6 +82,9 @@
         </portlet-info>
         <security-role-ref>
             <role-name>administrator</role-name>
+        </security-role-ref>
+        <security-role-ref>
+            <role-name>cursos-admin</role-name>
         </security-role-ref>
         <security-role-ref>
             <role-name>guest</role-name>

@@ -91,7 +91,7 @@ public class SalonPortlet {
             @RequestParam(value = "direccion", required = false) String direccion,
             Model modelo) throws SystemException, PortalException {
 
-        if (request.isUserInRole("Administrator")) {
+        if (request.isUserInRole("Administrator") || request.isUserInRole("cursos-admin")) {
             log.debug("Mostrando lista de salones");
             Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
             Long total = salonDao.cantidad(comunidades.keySet());

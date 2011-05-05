@@ -34,10 +34,14 @@
                 </tbody>
             </table>
         </div>
-        <aui:button-row>
-            <aui:button onClick='<%= renderResponse.getNamespace() + "saveSelectBoxes();" %>' type="submit" />
-            <span class="button"><a class="cancel" href='<portlet:renderURL portletMode="view"/>'><liferay-ui:message key="curso.cancela" /></a></span>
-        </aui:button-row>
+        <portlet:renderURL var="verCurso" >
+            <portlet:param name="action" value="ver" />
+            <portlet:param name="cursoId" value="${curso.id}" />
+        </portlet:renderURL>
+        <div class="nav">
+            <span class="menuButtonn"><input type="submit" name="<portlet:namespace />_crea" class="save" value="<liferay-ui:message key='curso.actualiza' />" onclick='<%= renderResponse.getNamespace() + "saveSelectBoxes();" %>' /></span>
+            <span class="menuButton"><a class="cancel" href="${verCurso}"><liferay-ui:message key="curso.cancela" /></a></span>
+        </div>                    
     </aui:form>
 </div>
 <aui:script>

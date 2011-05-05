@@ -81,12 +81,12 @@
             </tbody>
         </table>
     </div>
-    <div class="buttons">
-        <span class="button"><a class="edit" href="${editaCurso}"><liferay-ui:message key="curso.edita" /></a></span>
-        <span class="button"><a class="edit" href="${editaContenido}"><liferay-ui:message key="curso.contenido" /></a></span>
-        <span class="button"><a class="delete" href="${eliminaCurso}"><liferay-ui:message key="curso.elimina" /></a></span>
-        <span class="button"><a class="edit" href="${nuevoExamen}"><liferay-ui:message key="examen.nuevo" /></a></span>
-        <span class="button"><a class="back" href="<portlet:renderURL portletMode="view"/>"><liferay-ui:message key="curso.regresa" /></a></span>
+    <div class="nav">
+        <span class="menuButton"><a class="edit" href="${editaCurso}"><liferay-ui:message key="curso.edita" /></a></span>
+        <span class="menuButton"><a class="edit" href="${editaContenido}"><liferay-ui:message key="curso.contenido" /></a></span>
+        <span class="menuButton"><a class="delete" href="${eliminaCurso}"><liferay-ui:message key="curso.elimina" /></a></span>
+        <span class="menuButton"><a class="edit" href="${nuevoExamen}"><liferay-ui:message key="examen.nuevo" /></a></span>
+        <span class="menuButton"><a class="back" href="<portlet:renderURL portletMode="view"/>"><liferay-ui:message key="curso.regresa" /></a></span>
     </div>
 </div>
 

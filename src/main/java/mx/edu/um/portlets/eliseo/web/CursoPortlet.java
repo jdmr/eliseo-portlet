@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.model.Role;
 import com.liferay.portal.model.User;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
@@ -102,7 +103,6 @@ public class CursoPortlet {
 
     @ModelAttribute("curso")
     public Curso getCommandObject() {
-        log.info("Creando el curso");
         if (curso == null) {
             curso = new Curso();
         }
@@ -115,10 +115,10 @@ public class CursoPortlet {
             @RequestParam(value = "max", required = false) Integer max,
             @RequestParam(value = "direccion", required = false) String direccion,
             Model modelo) throws PortalException, SystemException {
-        if (request.isUserInRole("Administrator")) {
-            log.debug("Lista de cursos");
+
+        if (request.isUserInRole("Administrator") || request.isUserInRole("cursos-admin")) {
             curso = null;
-            User user = PortalUtil.getUser(request);
+            
             Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
             Long total = cursoDao.cantidad(comunidades.keySet());
             modelo.addAttribute("cantidad", total);
