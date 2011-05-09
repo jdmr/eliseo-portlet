@@ -182,8 +182,9 @@ public class CursosActivosPortlet {
                     salon = salonDao.obtiene(id);
 
                     // Busca el contenido del dia
-                    String[] tags = new String[] {salon.getNombre().toLowerCase(),messageSource.getMessage("curso.codigo", null, themeDisplay.getLocale())};
+                    String[] tags = new String[] {salon.getNombre().toLowerCase(),messageSource.getMessage("inscripcion", null, themeDisplay.getLocale())};
 
+                    log.debug("Buscando por tags: {} || {}",tags, messageSource.getMessage("inscripcion", null, themeDisplay.getLocale()));
                     long[] assetTagIds = AssetTagLocalServiceUtil.getTagIds(scopeGroupId, tags);
 
                     assetEntryQuery.setAllTagIds(assetTagIds);
