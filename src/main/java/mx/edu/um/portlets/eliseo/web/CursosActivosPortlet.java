@@ -3,16 +3,35 @@ package mx.edu.um.portlets.eliseo.web;
 import mx.edu.um.portlets.eliseo.utils.SesionVO;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.servlet.ImageServletTokenUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.User;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.asset.model.AssetEntry;
+import com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil;
 import com.liferay.portlet.asset.service.AssetEntryServiceUtil;
 import com.liferay.portlet.asset.service.AssetTagLocalServiceUtil;
 import com.liferay.portlet.asset.service.persistence.AssetEntryQuery;
+import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil;
+import com.liferay.portlet.imagegallery.model.IGImage;
+import com.liferay.portlet.imagegallery.service.IGImageLocalServiceUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
+import com.liferay.portlet.journal.model.JournalArticleDisplay;
+import com.liferay.portlet.journal.model.JournalArticleResource;
 import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
+import com.liferay.portlet.journal.service.JournalArticleResourceLocalServiceUtil;
+import com.liferay.portlet.journalcontent.util.JournalContentUtil;
+import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
+import com.liferay.util.portlet.PortletRequestUtil;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,6 +46,7 @@ import javax.portlet.RenderResponse;
 import mx.edu.um.portlets.eliseo.dao.CursoDao;
 import mx.edu.um.portlets.eliseo.model.Salon;
 import mx.edu.um.portlets.eliseo.dao.SalonDao;
+import mx.edu.um.portlets.eliseo.model.Curso;
 import mx.edu.um.portlets.eliseo.model.Sesion;
 import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
 import mx.edu.um.portlets.eliseo.utils.ZonaHorariaUtil;
@@ -128,7 +148,7 @@ public class CursosActivosPortlet {
         if (user != null) {
             log.debug("Usuario {}", user);
             Boolean estaInscrito = salonDao.estaInscrito(id, user.getPrimaryKey());
-            log.debug("Esta inscrito {}",estaInscrito);
+            log.debug("Esta inscrito {}", estaInscrito);
             if (estaInscrito) {
                 model.addAttribute("estaInscrito", true);
                 // validar si es hora de entrar a alguna sesion en vivo
@@ -137,7 +157,7 @@ public class CursosActivosPortlet {
                 String hora = sdf.format(new Date());
                 Date hoy = sdf.parse(hora);
                 Boolean existeSesionActiva = salonDao.existeSesionActiva(id, hoy.getDay(), hoy);
-                log.debug("Hay sesion activa {}",existeSesionActiva);
+                log.debug("Hay sesion activa {}", existeSesionActiva);
                 if (existeSesionActiva) {
                     model.addAttribute("salonUrl", salon.getUrl());
                 }
@@ -178,13 +198,13 @@ public class CursosActivosPortlet {
                         log.debug("Subiendo atributo hoy({}) a la sesion", hoy);
                         request.getPortletSession().setAttribute("hoy", hoy, PortletSession.APPLICATION_SCOPE);
                     }
-                    
+
                     salon = salonDao.obtiene(id);
 
-                    // Busca el contenido del dia
-                    String[] tags = new String[] {salon.getNombre().toLowerCase(),messageSource.getMessage("inscripcion", null, themeDisplay.getLocale())};
+                    // Busca el contenido de inscripcion
+                    String[] tags = new String[]{salon.getNombre().toLowerCase(), messageSource.getMessage("inscripcion", null, themeDisplay.getLocale())};
 
-                    log.debug("Buscando por tags: {} || {}",tags, messageSource.getMessage("inscripcion", null, themeDisplay.getLocale()));
+                    log.debug("Buscando por tags: {} || {}", tags, messageSource.getMessage("inscripcion", null, themeDisplay.getLocale()));
                     long[] assetTagIds = AssetTagLocalServiceUtil.getTagIds(scopeGroupId, tags);
 
                     assetEntryQuery.setAllTagIds(assetTagIds);
@@ -214,4 +234,96 @@ public class CursosActivosPortlet {
         return resultado;
     }
 
+    @RequestMapping(params = "action=contenido")
+    public String contenidos(RenderRequest request, RenderResponse response, @RequestParam("salonId") Long id, Model model) throws PortalException, SystemException, ParseException {
+        log.debug("Listado de contenido");
+        salon = salonDao.obtiene(id);
+        Curso curso = salon.getCurso();
+        model.addAttribute("salon", salon);
+        String[] contenidos = StringUtil.split(curso.getContenidos());
+        List<AssetEntry> assetEntries = new ArrayList<AssetEntry>();
+        for (String key : contenidos) {
+            assetEntries.add(AssetEntryLocalServiceUtil.getEntry(new Long(key)));
+        }
+
+        if (assetEntries.size() > 0) {
+            model.addAttribute("contenidos", assetEntries);
+        }
+
+        return "cursosActivos/temario";
+    }
+    
+    @RequestMapping(params = "action=verContenido")
+    public String verContenido(RenderRequest request, RenderResponse response, @RequestParam Long salonId, @RequestParam Long contenidoId, Model model) throws PortalException, SystemException, ParseException {
+        log.debug("Ver contenido");
+        salon = salonDao.obtiene(salonId);
+        Curso curso = salon.getCurso();
+        model.addAttribute("salon", salon);
+        model.addAttribute("curso", curso);
+        model.addAttribute("contenidoId", contenidoId);
+        ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+        try {
+            AssetEntry contenido = AssetEntryServiceUtil.getEntry(new Long(contenidoId));
+            log.debug("Contenido: " + contenido);
+            if (contenido.getClassName().equals(JournalArticle.class.getName())) {
+                JournalArticleResource articleResource = JournalArticleResourceLocalServiceUtil.getArticleResource(contenido.getClassPK());
+                String templateId = (String) request.getAttribute("JOURNAL_TEMPLATE_ID");
+                String languageId = LanguageUtil.getLanguageId(request);
+                int articlePage = ParamUtil.getInteger(request, "page", 1);
+                String xmlRequest = PortletRequestUtil.toXML(request, response);
+                model.addAttribute("currentURL", themeDisplay.getURLCurrent());
+
+                JournalArticleDisplay articleDisplay = JournalContentUtil.getDisplay(articleResource.getGroupId(), articleResource.getArticleId(), templateId, null, languageId, themeDisplay, articlePage, xmlRequest);
+
+                if (articleDisplay != null) {
+                    AssetEntryServiceUtil.incrementViewCounter(contenido.getClassName(), articleDisplay.getResourcePrimKey());
+                    model.addAttribute("articleDisplay", articleDisplay);
+
+                    String[] availableLocales = articleDisplay.getAvailableLocales();
+                    if (availableLocales.length > 0) {
+                        model.addAttribute("availableLocales", availableLocales);
+                    }
+                    int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(JournalArticle.class.getName()), articleDisplay.getResourcePrimKey(), WorkflowConstants.STATUS_APPROVED);
+                    if (discussionMessagesCount > 0) {
+                        model.addAttribute("discussionMessages", true);
+                    }
+                }
+            } else if (contenido.getClassName().equals(IGImage.class.getName())) {
+                IGImage image = IGImageLocalServiceUtil.getImage(contenido.getClassPK());
+                AssetEntryServiceUtil.incrementViewCounter(contenido.getClassName(), image.getImageId());
+                model.addAttribute("contenido", contenido);
+                model.addAttribute("image", image);
+                model.addAttribute("imageURL", themeDisplay.getPathImage() + "/image_gallery?img_id=" + image.getLargeImageId() + "&t=" + ImageServletTokenUtil.getToken(image.getLargeImageId()));
+                int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(IGImage.class.getName()),
+                        image.getPrimaryKey(),
+                        WorkflowConstants.STATUS_APPROVED);
+                if (discussionMessagesCount > 0) {
+                    model.addAttribute("discussionMessages", true);
+                }
+            } else if (contenido.getClassName().equals(DLFileEntry.class.getName())) {
+                DLFileEntry fileEntry = DLFileEntryLocalServiceUtil.getFileEntry(contenido.getClassPK());
+
+                model.addAttribute("document", fileEntry);
+                String fileUrl = themeDisplay.getPortalURL() + themeDisplay.getPathContext() + "/documents/" + themeDisplay.getScopeGroupId() + StringPool.SLASH + fileEntry.getFolderId() + StringPool.SLASH + HttpUtil.encodeURL(HtmlUtil.unescape(fileEntry.getTitle()));
+                //model.addAttribute("documentURL", themeDisplay.getPathMain() + "/document_library/get_file?p_l_id=" + themeDisplay.getPlid() + "&folderId=" + fileEntry.getFolderId() + "&name=" + HttpUtil.encodeURL(fileEntry.getName()));
+                model.addAttribute("documentURL", fileUrl);
+
+                log.debug("NAME: {} {}", fileEntry.getTitle(), contenido.getMimeType());
+                if (contenido.getMimeType().startsWith("video")
+                        || contenido.getMimeType().equals("application/x-shockwave-flash")) {
+                    model.addAttribute("video", true);
+                }
+                int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(DLFileEntry.class.getName()),
+                        fileEntry.getPrimaryKey(),
+                        WorkflowConstants.STATUS_APPROVED);
+                if (discussionMessagesCount > 0) {
+                    model.addAttribute("discussionMessages", true);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error al traer el contenido", e);
+        }
+
+        return "cursosActivos/verContenido";
+    }
 }

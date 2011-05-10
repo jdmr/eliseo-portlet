@@ -278,7 +278,7 @@ public class CursoPortlet {
 
             AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
-            // Busca el contenido del dia
+            // Busca el contenido del curso
             String[] tags = new String[]{curso.getCodigo().toLowerCase()};
 
             long[] assetTagIds = AssetTagLocalServiceUtil.getTagIds(scopeGroupId, tags);
@@ -401,7 +401,7 @@ public class CursoPortlet {
                 //model.addAttribute("documentURL", themeDisplay.getPathMain() + "/document_library/get_file?p_l_id=" + themeDisplay.getPlid() + "&folderId=" + fileEntry.getFolderId() + "&name=" + HttpUtil.encodeURL(fileEntry.getName()));
                 model.addAttribute("documentURL", fileUrl);
 
-                log.debug("NAME: {}", fileEntry.getTitle());
+                log.debug("NAME: {} {}", fileEntry.getTitle(), contenido.getMimeType());
                 if (contenido.getMimeType().startsWith("video")
                         || contenido.getMimeType().equals("application/x-shockwave-flash")) {
                     model.addAttribute("video", true);
