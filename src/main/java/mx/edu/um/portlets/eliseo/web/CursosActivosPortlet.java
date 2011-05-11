@@ -46,9 +46,11 @@ import javax.portlet.RenderResponse;
 import mx.edu.um.portlets.eliseo.dao.CursoDao;
 import mx.edu.um.portlets.eliseo.model.Salon;
 import mx.edu.um.portlets.eliseo.dao.SalonDao;
+import mx.edu.um.portlets.eliseo.model.AlumnoContenido;
 import mx.edu.um.portlets.eliseo.model.Curso;
 import mx.edu.um.portlets.eliseo.model.Sesion;
 import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
+import mx.edu.um.portlets.eliseo.utils.ContenidoVO;
 import mx.edu.um.portlets.eliseo.utils.ZonaHorariaUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -237,93 +239,142 @@ public class CursosActivosPortlet {
     @RequestMapping(params = "action=contenido")
     public String contenidos(RenderRequest request, RenderResponse response, @RequestParam("salonId") Long id, Model model) throws PortalException, SystemException, ParseException {
         log.debug("Listado de contenido");
-        salon = salonDao.obtiene(id);
-        Curso curso = salon.getCurso();
-        model.addAttribute("salon", salon);
-        String[] contenidos = StringUtil.split(curso.getContenidos());
-        List<AssetEntry> assetEntries = new ArrayList<AssetEntry>();
-        for (String key : contenidos) {
-            assetEntries.add(AssetEntryLocalServiceUtil.getEntry(new Long(key)));
+        String resultado;
+        User user = PortalUtil.getUser(request);
+        if (user != null) {
+            ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+            salon = salonDao.obtiene(id);
+            Curso curso = salon.getCurso();
+            model.addAttribute("salon", salon);
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+            sdf.setTimeZone(themeDisplay.getTimeZone());
+            String[] contenidos = StringUtil.split(curso.getContenidos());
+            List<ContenidoVO> assetEntries = new ArrayList<ContenidoVO>();
+            for (String key : contenidos) {
+                AssetEntry assetEntry = AssetEntryLocalServiceUtil.getEntry(new Long(key));
+                String tipo;
+                if (assetEntry.getClassName().equals(IGImage.class.getName())) {
+                    tipo = messageSource.getMessage("tipoContenido.imagen", null, themeDisplay.getLocale());
+                } else if (assetEntry.getClassName().equals(DLFileEntry.class.getName())) {
+                    if (assetEntry.getMimeType().startsWith("video")
+                            || assetEntry.getMimeType().equals("application/x-shockwave-flash")) {
+                        tipo = messageSource.getMessage("tipoContenido.video", null, themeDisplay.getLocale());
+                    } else {
+                        tipo = messageSource.getMessage("tipoContenido.archivo", null, themeDisplay.getLocale());
+                    }
+                } else {
+                    tipo = messageSource.getMessage("tipoContenido.articulo", null, themeDisplay.getLocale());
+                }
+
+                ContenidoVO contenido;
+                AlumnoContenido alumnoContenido = cursoDao.buscaAlumnoContenido(user.getPrimaryKey(), assetEntry.getEntryId());
+                if (alumnoContenido != null) {
+                    contenido = new ContenidoVO(assetEntry.getEntryId(), assetEntry.getTitle(),tipo,messageSource.getMessage(alumnoContenido.getEstatus(), null, themeDisplay.getLocale()),sdf.format(alumnoContenido.getUltimaVista()));
+                } else {
+                    contenido = new ContenidoVO(assetEntry.getEntryId(), assetEntry.getTitle(),tipo,messageSource.getMessage("estatus.noVisto", null, themeDisplay.getLocale()),"");
+                }
+                assetEntries.add(contenido);
+            }
+
+            if (assetEntries.size() > 0) {
+                model.addAttribute("contenidos", assetEntries);
+            }
+            resultado = "cursosActivos/temario";
+        } else {
+            resultado = this.lista(request, null, null, null, model);
         }
 
-        if (assetEntries.size() > 0) {
-            model.addAttribute("contenidos", assetEntries);
-        }
-
-        return "cursosActivos/temario";
+        return resultado;
     }
     
     @RequestMapping(params = "action=verContenido")
     public String verContenido(RenderRequest request, RenderResponse response, @RequestParam Long salonId, @RequestParam Long contenidoId, Model model) throws PortalException, SystemException, ParseException {
         log.debug("Ver contenido");
-        salon = salonDao.obtiene(salonId);
-        Curso curso = salon.getCurso();
-        model.addAttribute("salon", salon);
-        model.addAttribute("curso", curso);
-        model.addAttribute("contenidoId", contenidoId);
-        ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
-        try {
-            AssetEntry contenido = AssetEntryServiceUtil.getEntry(new Long(contenidoId));
-            log.debug("Contenido: " + contenido);
-            if (contenido.getClassName().equals(JournalArticle.class.getName())) {
-                JournalArticleResource articleResource = JournalArticleResourceLocalServiceUtil.getArticleResource(contenido.getClassPK());
-                String templateId = (String) request.getAttribute("JOURNAL_TEMPLATE_ID");
-                String languageId = LanguageUtil.getLanguageId(request);
-                int articlePage = ParamUtil.getInteger(request, "page", 1);
-                String xmlRequest = PortletRequestUtil.toXML(request, response);
-                model.addAttribute("currentURL", themeDisplay.getURLCurrent());
+        String resultado;
+        User user = PortalUtil.getUser(request);
+        if (user != null) {
+            salon = salonDao.obtiene(salonId);
+            Curso curso = salon.getCurso();
+            model.addAttribute("salon", salon);
+            model.addAttribute("curso", curso);
+            model.addAttribute("contenidoId", contenidoId);
+            ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+            try {
+                AssetEntry contenido = AssetEntryServiceUtil.getEntry(new Long(contenidoId));
+                AlumnoContenido alumnoContenido = cursoDao.buscaAlumnoContenido(user.getPrimaryKey(), contenido.getEntryId());
+                if (alumnoContenido == null) {
+                    alumnoContenido = new AlumnoContenido(user.getPrimaryKey(), contenido.getEntryId());
+                    cursoDao.creaAlumnoContenido(alumnoContenido);
+                } else {
+                    alumnoContenido.incrementaVista();
+                    alumnoContenido.setEstatus("estatus.visto");
+                    cursoDao.actualizaAlumnoContenido(alumnoContenido);
+                }
+                log.debug("Contenido: " + contenido);
+                if (contenido.getClassName().equals(JournalArticle.class.getName())) {
+                    JournalArticleResource articleResource = JournalArticleResourceLocalServiceUtil.getArticleResource(contenido.getClassPK());
+                    String templateId = (String) request.getAttribute("JOURNAL_TEMPLATE_ID");
+                    String languageId = LanguageUtil.getLanguageId(request);
+                    int articlePage = ParamUtil.getInteger(request, "page", 1);
+                    String xmlRequest = PortletRequestUtil.toXML(request, response);
+                    model.addAttribute("currentURL", themeDisplay.getURLCurrent());
 
-                JournalArticleDisplay articleDisplay = JournalContentUtil.getDisplay(articleResource.getGroupId(), articleResource.getArticleId(), templateId, null, languageId, themeDisplay, articlePage, xmlRequest);
+                    JournalArticleDisplay articleDisplay = JournalContentUtil.getDisplay(articleResource.getGroupId(), articleResource.getArticleId(), templateId, null, languageId, themeDisplay, articlePage, xmlRequest);
 
-                if (articleDisplay != null) {
-                    AssetEntryServiceUtil.incrementViewCounter(contenido.getClassName(), articleDisplay.getResourcePrimKey());
-                    model.addAttribute("articleDisplay", articleDisplay);
+                    if (articleDisplay != null) {
+                        AssetEntryServiceUtil.incrementViewCounter(contenido.getClassName(), articleDisplay.getResourcePrimKey());
+                        model.addAttribute("articleDisplay", articleDisplay);
 
-                    String[] availableLocales = articleDisplay.getAvailableLocales();
-                    if (availableLocales.length > 0) {
-                        model.addAttribute("availableLocales", availableLocales);
+                        String[] availableLocales = articleDisplay.getAvailableLocales();
+                        if (availableLocales.length > 0) {
+                            model.addAttribute("availableLocales", availableLocales);
+                        }
+                        int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(JournalArticle.class.getName()), articleDisplay.getResourcePrimKey(), WorkflowConstants.STATUS_APPROVED);
+                        if (discussionMessagesCount > 0) {
+                            model.addAttribute("discussionMessages", true);
+                        }
                     }
-                    int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(JournalArticle.class.getName()), articleDisplay.getResourcePrimKey(), WorkflowConstants.STATUS_APPROVED);
+                } else if (contenido.getClassName().equals(IGImage.class.getName())) {
+                    IGImage image = IGImageLocalServiceUtil.getImage(contenido.getClassPK());
+                    AssetEntryServiceUtil.incrementViewCounter(contenido.getClassName(), image.getImageId());
+                    model.addAttribute("contenido", contenido);
+                    model.addAttribute("image", image);
+                    model.addAttribute("imageURL", themeDisplay.getPathImage() + "/image_gallery?img_id=" + image.getLargeImageId() + "&t=" + ImageServletTokenUtil.getToken(image.getLargeImageId()));
+                    int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(IGImage.class.getName()),
+                            image.getPrimaryKey(),
+                            WorkflowConstants.STATUS_APPROVED);
+                    if (discussionMessagesCount > 0) {
+                        model.addAttribute("discussionMessages", true);
+                    }
+                } else if (contenido.getClassName().equals(DLFileEntry.class.getName())) {
+                    DLFileEntry fileEntry = DLFileEntryLocalServiceUtil.getFileEntry(contenido.getClassPK());
+
+                    model.addAttribute("document", fileEntry);
+                    String fileUrl = themeDisplay.getPortalURL() + themeDisplay.getPathContext() + "/documents/" + themeDisplay.getScopeGroupId() + StringPool.SLASH + fileEntry.getFolderId() + StringPool.SLASH + HttpUtil.encodeURL(HtmlUtil.unescape(fileEntry.getTitle()));
+                    //model.addAttribute("documentURL", themeDisplay.getPathMain() + "/document_library/get_file?p_l_id=" + themeDisplay.getPlid() + "&folderId=" + fileEntry.getFolderId() + "&name=" + HttpUtil.encodeURL(fileEntry.getName()));
+                    model.addAttribute("documentURL", fileUrl);
+
+                    log.debug("NAME: {} {}", fileEntry.getTitle(), contenido.getMimeType());
+                    if (contenido.getMimeType().startsWith("video")
+                            || contenido.getMimeType().equals("application/x-shockwave-flash")) {
+                        model.addAttribute("video", true);
+                    }
+                    int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(DLFileEntry.class.getName()),
+                            fileEntry.getPrimaryKey(),
+                            WorkflowConstants.STATUS_APPROVED);
                     if (discussionMessagesCount > 0) {
                         model.addAttribute("discussionMessages", true);
                     }
                 }
-            } else if (contenido.getClassName().equals(IGImage.class.getName())) {
-                IGImage image = IGImageLocalServiceUtil.getImage(contenido.getClassPK());
-                AssetEntryServiceUtil.incrementViewCounter(contenido.getClassName(), image.getImageId());
-                model.addAttribute("contenido", contenido);
-                model.addAttribute("image", image);
-                model.addAttribute("imageURL", themeDisplay.getPathImage() + "/image_gallery?img_id=" + image.getLargeImageId() + "&t=" + ImageServletTokenUtil.getToken(image.getLargeImageId()));
-                int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(IGImage.class.getName()),
-                        image.getPrimaryKey(),
-                        WorkflowConstants.STATUS_APPROVED);
-                if (discussionMessagesCount > 0) {
-                    model.addAttribute("discussionMessages", true);
-                }
-            } else if (contenido.getClassName().equals(DLFileEntry.class.getName())) {
-                DLFileEntry fileEntry = DLFileEntryLocalServiceUtil.getFileEntry(contenido.getClassPK());
-
-                model.addAttribute("document", fileEntry);
-                String fileUrl = themeDisplay.getPortalURL() + themeDisplay.getPathContext() + "/documents/" + themeDisplay.getScopeGroupId() + StringPool.SLASH + fileEntry.getFolderId() + StringPool.SLASH + HttpUtil.encodeURL(HtmlUtil.unescape(fileEntry.getTitle()));
-                //model.addAttribute("documentURL", themeDisplay.getPathMain() + "/document_library/get_file?p_l_id=" + themeDisplay.getPlid() + "&folderId=" + fileEntry.getFolderId() + "&name=" + HttpUtil.encodeURL(fileEntry.getName()));
-                model.addAttribute("documentURL", fileUrl);
-
-                log.debug("NAME: {} {}", fileEntry.getTitle(), contenido.getMimeType());
-                if (contenido.getMimeType().startsWith("video")
-                        || contenido.getMimeType().equals("application/x-shockwave-flash")) {
-                    model.addAttribute("video", true);
-                }
-                int discussionMessagesCount = MBMessageLocalServiceUtil.getDiscussionMessagesCount(PortalUtil.getClassNameId(DLFileEntry.class.getName()),
-                        fileEntry.getPrimaryKey(),
-                        WorkflowConstants.STATUS_APPROVED);
-                if (discussionMessagesCount > 0) {
-                    model.addAttribute("discussionMessages", true);
-                }
+            } catch (Exception e) {
+                log.error("Error al traer el contenido", e);
             }
-        } catch (Exception e) {
-            log.error("Error al traer el contenido", e);
+            resultado = "cursosActivos/verContenido";
+        } else {
+            resultado = this.lista(request, null, null, null, model);
         }
 
-        return "cursosActivos/verContenido";
+        return resultado;
     }
 }

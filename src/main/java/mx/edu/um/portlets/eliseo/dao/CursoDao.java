@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import mx.edu.um.portlets.eliseo.model.AlumnoContenido;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -57,9 +58,9 @@ public class CursoDao {
     public List<Curso> busca(Map<String, Object> params) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Curso.class);
-        if (params != null && params.containsKey("filtro") && ((String)params.get("filtro")).trim().length() > 0) {
-            String filtro = "%" + ((String)params.get("filtro")).trim() + "%";
-            log.debug("Buscando cursos por {}",filtro);
+        if (params != null && params.containsKey("filtro") && ((String) params.get("filtro")).trim().length() > 0) {
+            String filtro = "%" + ((String) params.get("filtro")).trim() + "%";
+            log.debug("Buscando cursos por {}", filtro);
             Disjunction propiedades = Restrictions.disjunction();
             propiedades.add(Restrictions.ilike("codigo", filtro));
             propiedades.add(Restrictions.ilike("nombre", filtro));
@@ -67,7 +68,7 @@ public class CursoDao {
             criteria.add(propiedades);
         }
         if (params != null && params.containsKey("comunidades")) {
-            criteria.add(Restrictions.in("comunidadId",(Set<Long>)params.get("comunidades")));
+            criteria.add(Restrictions.in("comunidadId", (Set<Long>) params.get("comunidades")));
         } else {
             throw new RuntimeException("Se requiere la comunidad para hacer la busqueda");
         }
@@ -116,7 +117,7 @@ public class CursoDao {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Curso.class);
         if (params != null && params.containsKey("comunidades")) {
-            criteria.add(Restrictions.in("comunidadId",(Set<Long>)params.get("comunidades")));
+            criteria.add(Restrictions.in("comunidadId", (Set<Long>) params.get("comunidades")));
         } else {
             throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
@@ -128,7 +129,7 @@ public class CursoDao {
 
     public Long cantidadActiva(Set<Long> comunidades, Date hoy) {
         log.debug("Obteniendo cantidad de cursos activos");
-        log.debug("Params: {} ||| {}",comunidades, hoy);
+        log.debug("Params: {} ||| {}", comunidades, hoy);
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Salon.class);
         criteria.add(Restrictions.le("inicia", hoy));
@@ -140,12 +141,12 @@ public class CursoDao {
         }
         criteria.setProjection(Projections.rowCount());
         Long resultado = (Long) criteria.list().get(0);
-        log.debug("El resultado: {}",resultado);
+        log.debug("El resultado: {}", resultado);
         return resultado;
     }
 
     public Map<String, Object> listaActivos(Map<String, Object> params, Date hoy) {
-        log.debug("Obteniendo lista de cursos activos al dia de {}",hoy);
+        log.debug("Obteniendo lista de cursos activos al dia de {}", hoy);
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
         }
@@ -154,7 +155,7 @@ public class CursoDao {
         criteria.add(Restrictions.le("inicia", hoy));
         criteria.add(Restrictions.ge("termina", hoy));
         if (params != null && params.containsKey("comunidades")) {
-            criteria.createCriteria("curso").add(Restrictions.in("comunidadId", (Set<Long>)params.get("comunidades")));
+            criteria.createCriteria("curso").add(Restrictions.in("comunidadId", (Set<Long>) params.get("comunidades")));
         } else {
             throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
@@ -164,5 +165,23 @@ public class CursoDao {
         params.put("salones", salones);
         return params;
     }
+
+    public AlumnoContenido buscaAlumnoContenido(Long alumnoId, Long contenidoId) {
+        log.debug("Buscando relacion alumno {} contenido {}", alumnoId, contenidoId);
+        Session session = hibernateTemplate.getSessionFactory().openSession();
+        Criteria criteria = session.createCriteria(AlumnoContenido.class);
+        criteria.add(Restrictions.eq("alumnoId", alumnoId));
+        criteria.add(Restrictions.eq("contenidoId", contenidoId));
+        return (AlumnoContenido) criteria.uniqueResult();
+    }
     
+    public void creaAlumnoContenido(AlumnoContenido alumnoContenido) {
+        log.debug("Creando nuevo registro de alumno-contenido {}-{}", alumnoContenido.getAlumnoId(), alumnoContenido.getContenidoId());
+        hibernateTemplate.save(alumnoContenido);
+    }
+
+    public void actualizaAlumnoContenido(AlumnoContenido alumnoContenido) {
+        log.debug("Actualizando registro de alumno-contenido {}-{}", alumnoContenido.getAlumnoId(), alumnoContenido.getContenidoId());
+        hibernateTemplate.update(alumnoContenido);
+    }
 }
