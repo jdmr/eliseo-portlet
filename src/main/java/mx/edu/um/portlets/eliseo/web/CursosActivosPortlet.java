@@ -158,7 +158,7 @@ public class CursosActivosPortlet {
                 sdf.setTimeZone(themeDisplay.getTimeZone());
                 String hora = sdf.format(new Date());
                 Date hoy = sdf.parse(hora);
-                Boolean existeSesionActiva = salonDao.existeSesionActiva(id, hoy.getDay(), hoy);
+                Boolean existeSesionActiva = salonDao.existeSesionActiva(id, hoy.getDay() + 1, hoy);
                 log.debug("Hay sesion activa {}", existeSesionActiva);
                 if (existeSesionActiva) {
                     model.addAttribute("salonUrl", salon.getUrl());
@@ -202,6 +202,7 @@ public class CursosActivosPortlet {
                     }
 
                     salon = salonDao.obtiene(id);
+                    model.addAttribute("salon",salon);
 
                     // Busca el contenido de inscripcion
                     String[] tags = new String[]{salon.getNombre().toLowerCase(), messageSource.getMessage("inscripcion", null, themeDisplay.getLocale())};
