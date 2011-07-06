@@ -32,9 +32,12 @@ import com.liferay.portlet.journal.service.JournalArticleResourceLocalServiceUti
 import com.liferay.portlet.journalcontent.util.JournalContentUtil;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 import com.liferay.util.portlet.PortletRequestUtil;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -153,12 +156,9 @@ public class CursosActivosPortlet {
             log.debug("Esta inscrito {}", estaInscrito);
             if (estaInscrito) {
                 model.addAttribute("estaInscrito", true);
+                Calendar cal = Calendar.getInstance(themeDisplay.getTimeZone());
                 // validar si es hora de entrar a alguna sesion en vivo
-                sdf = new SimpleDateFormat("HH:mm");
-                sdf.setTimeZone(themeDisplay.getTimeZone());
-                String hora = sdf.format(new Date());
-                Date hoy = sdf.parse(hora);
-                Boolean existeSesionActiva = salonDao.existeSesionActiva(id, hoy.getDay() + 1, hoy);
+                Boolean existeSesionActiva = salonDao.existeSesionActiva(id, cal.get(Calendar.DAY_OF_WEEK), cal.getTime());
                 log.debug("Hay sesion activa {}", existeSesionActiva);
                 if (existeSesionActiva) {
                     model.addAttribute("salonUrl", salon.getUrl());
