@@ -78,6 +78,38 @@
                     </td>
                 </tr>
 
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="nombre"><liferay-ui:message key="curso.examenes" /></label>
+                    </td>
+                    <td valign="top" class="value">
+                        <c:if test="${examenes != null}">
+                            <div class="list">
+                                <table id="<portlet:namespace />examenes">
+                                    <thead>
+                                        <tr>
+
+                                            <th><liferay-ui:message key="curso.nombre" /></th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${examenes}" var="examen" varStatus="status">
+                                            <portlet:renderURL var="verExamen" >
+                                                <portlet:param name="action" value="verExamen" />
+                                                <portlet:param name="examenId" value="${examen.id}" />
+                                            </portlet:renderURL>
+                                            <tr class="${(status.count % 2) == 0 ? 'odd' : 'even'}">
+                                                <td><a href="${verExamen}">${examen.nombre}</a></td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:if>
+                    </td>
+                </tr>
+
             </tbody>
         </table>
     </div>

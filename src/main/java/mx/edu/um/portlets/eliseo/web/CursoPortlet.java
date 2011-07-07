@@ -85,7 +85,6 @@ public class CursoPortlet {
     @Autowired
     private ExamenDao examenDao;
     private Examen examen;
-    
     @Autowired
     private MessageSource messageSource;
 
@@ -97,7 +96,7 @@ public class CursoPortlet {
     public void inicializar(PortletRequestDataBinder binder) {
         if (binder.getTarget() instanceof Curso) {
             binder.setValidator(cursoValidator);
-            binder.registerCustomEditor(Date.class, null,new CustomDateEditor(new SimpleDateFormat("dd/MM/yyyy"),false));
+            binder.registerCustomEditor(Date.class, null, new CustomDateEditor(new SimpleDateFormat("dd/MM/yyyy"), false));
         }
     }
 
@@ -108,7 +107,7 @@ public class CursoPortlet {
         }
         return curso;
     }
-    
+
     @RequestMapping
     public String lista(RenderRequest request,
             @RequestParam(value = "offset", required = false) Integer offset,
@@ -118,7 +117,7 @@ public class CursoPortlet {
 
         if (request.isUserInRole("Administrator") || request.isUserInRole("cursos-admin")) {
             curso = null;
-            
+
             Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
             Long total = cursoDao.cantidad(comunidades.keySet());
             modelo.addAttribute("cantidad", total);
@@ -137,7 +136,7 @@ public class CursoPortlet {
             Map<String, Object> params = new HashMap<String, Object>();
             params.put("max", max);
             params.put("offset", offset);
-            params.put("comunidades",comunidades.keySet());
+            params.put("comunidades", comunidades.keySet());
 
             params = cursoDao.lista(params);
             modelo.addAttribute("cursos", params.get("cursos"));
@@ -251,6 +250,7 @@ public class CursoPortlet {
             }
         }
         model.addAttribute("contenidos", contenidos);
+        model.addAttribute("examenes", cursoDao.obtieneExamenes(curso));
 
         return "curso/ver";
     }
@@ -419,7 +419,7 @@ public class CursoPortlet {
 
         return "curso/verContenido";
     }
-    
+
     @RequestMapping(params = "action=discusion")
     public void discusion(ActionRequest request, ActionResponse response,
             @ModelAttribute("curso") Curso curso, BindingResult result,
@@ -505,33 +505,32 @@ public class CursoPortlet {
 
         return message;
     }
-    
-    
+
     @RequestMapping(params = "action=nuevoExamen")
     public String nuevoExamen(
-            RenderRequest request, 
-            RenderResponse response, 
-            @RequestParam("cursoId") Long cursoId, 
+            RenderRequest request,
+            RenderResponse response,
+            @RequestParam("cursoId") Long cursoId,
             Model model) throws PortalException, SystemException {
-        
+
         curso = cursoDao.obtiene(cursoId, ComunidadUtil.obtieneComunidades(request).keySet());
         examen = new Examen();
         examen.setCurso(curso);
         model.addAttribute("curso", curso);
         model.addAttribute("examen", examen);
-        
+
         return "examen/nuevo";
     }
-    
+
     @RequestMapping(params = "action=creaExamen")
     public void creaExamen(ActionRequest request, ActionResponse response,
             @ModelAttribute("examen") Examen examen, BindingResult result,
             Model model, SessionStatus sessionStatus) throws PortalException, SystemException {
-        
+
         log.debug("Creando el examen");
         examen.setCurso(cursoDao.obtiene(examen.getCurso().getId(), ComunidadUtil.obtieneComunidades(request).keySet()));
         examen = examenDao.crea(examen);
-        
+
         response.setRenderParameter("action", "ver");
         response.setRenderParameter("cursoId", examen.getCurso().getId().toString());
     }
@@ -542,5 +541,46 @@ public class CursoPortlet {
 
     public void setExamen(Examen examen) {
         this.examen = examen;
+    }
+
+    @RequestMapping(params = "action=verExamen")
+    public String verExamen(RenderRequest request, @RequestParam("examenId") Long id, Model model) throws PortalException, SystemException {
+        log.debug("Ver examen");
+        examen = examenDao.obtiene(id);
+        model.addAttribute("examen", examen);
+
+        return "examen/ver";
+    }
+
+    @RequestMapping(params = "action=editaExamen")
+    public String editaExamen(RenderRequest request, @RequestParam("examenId") Long id, Model model) throws SystemException, PortalException {
+        log.debug("Edita examen");
+        model.addAttribute("examen", examenDao.obtiene(id));
+        return "examen/edita";
+    }
+
+    @RequestMapping(params = "action=eliminaExamen")
+    public void eliminaExamen(ActionRequest request, ActionResponse response,
+            @ModelAttribute("examen") Examen examen, BindingResult result,
+            Model model, SessionStatus sessionStatus, @RequestParam("examenId") Long id) throws PortalException, SystemException {
+        log.debug("Elimina examen {}", id);
+        examenDao.elimina(id);
+        sessionStatus.setComplete();
+    }
+
+    @RequestMapping(params = "action=actualizaExamen")
+    public void actualizaExamen(ActionRequest request, ActionResponse response,
+            @ModelAttribute("examen") Examen examen, BindingResult result,
+            Model model, SessionStatus sessionStatus) throws PortalException, SystemException {
+
+        log.debug("Creando el examen");
+        Examen x = examenDao.obtiene(examen.getId());
+        x.setVersion(examen.getVersion());
+        x.setCodigo(examen.getCodigo());
+        x.setNombre(examen.getNombre());
+        examen = examenDao.actualiza(x);
+
+        response.setRenderParameter("action", "verExamen");
+        response.setRenderParameter("examenId", examen.getId().toString());
     }
 }

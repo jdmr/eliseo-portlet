@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import mx.edu.um.portlets.eliseo.model.AlumnoContenido;
+import mx.edu.um.portlets.eliseo.model.Examen;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -183,5 +184,13 @@ public class CursoDao {
     public void actualizaAlumnoContenido(AlumnoContenido alumnoContenido) {
         log.debug("Actualizando registro de alumno-contenido {}-{}", alumnoContenido.getAlumnoId(), alumnoContenido.getContenidoId());
         hibernateTemplate.update(alumnoContenido);
+    }
+    
+    public List<Examen> obtieneExamenes(Curso curso) {
+        log.debug("Buscando examenes de {}",curso);
+        Session session = hibernateTemplate.getSessionFactory().openSession();
+        Criteria criteria = session.createCriteria(Examen.class);
+        criteria.add(Restrictions.eq("curso", curso));
+        return criteria.list();
     }
 }

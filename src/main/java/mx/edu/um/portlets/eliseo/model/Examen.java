@@ -134,7 +134,7 @@ public class Examen {
 
     @Override
     public String toString() {
-        return "Examen{" + "codigo=" + codigo + '}';
+        return nombre;
     }
     
     

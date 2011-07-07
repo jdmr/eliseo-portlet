@@ -17,6 +17,7 @@
             <actionName>run</actionName>
             <goals>
                 <goal>package</goal>
+                <goal>liferay:deploy</goal>
                 
             </goals>
             <properties>
