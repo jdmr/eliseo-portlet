@@ -1,6 +1,40 @@
 package mx.edu.um.portlets.eliseo.web;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
+import javax.portlet.PortletSession;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+
+import mx.edu.um.portlets.eliseo.dao.CursoDao;
+import mx.edu.um.portlets.eliseo.dao.SalonDao;
+import mx.edu.um.portlets.eliseo.model.AlumnoContenido;
+import mx.edu.um.portlets.eliseo.model.Curso;
+import mx.edu.um.portlets.eliseo.model.Salon;
+import mx.edu.um.portlets.eliseo.model.Sesion;
+import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
+import mx.edu.um.portlets.eliseo.utils.ContenidoVO;
 import mx.edu.um.portlets.eliseo.utils.SesionVO;
+import mx.edu.um.portlets.eliseo.utils.ZonaHorariaUtil;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -32,39 +66,6 @@ import com.liferay.portlet.journal.service.JournalArticleResourceLocalServiceUti
 import com.liferay.portlet.journalcontent.util.JournalContentUtil;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 import com.liferay.util.portlet.PortletRequestUtil;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import javax.portlet.PortletSession;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import mx.edu.um.portlets.eliseo.dao.CursoDao;
-import mx.edu.um.portlets.eliseo.model.Salon;
-import mx.edu.um.portlets.eliseo.dao.SalonDao;
-import mx.edu.um.portlets.eliseo.model.AlumnoContenido;
-import mx.edu.um.portlets.eliseo.model.Curso;
-import mx.edu.um.portlets.eliseo.model.Sesion;
-import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
-import mx.edu.um.portlets.eliseo.utils.ContenidoVO;
-import mx.edu.um.portlets.eliseo.utils.ZonaHorariaUtil;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  *

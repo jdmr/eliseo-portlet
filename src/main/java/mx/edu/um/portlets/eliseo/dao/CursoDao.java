@@ -55,7 +55,8 @@ public class CursoDao {
         return ((Long) criteria.list().get(0));
     }
 
-    @Transactional(readOnly = true)
+    @SuppressWarnings("unchecked")
+	@Transactional(readOnly = true)
     public List<Curso> busca(Map<String, Object> params) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Curso.class);
@@ -111,7 +112,8 @@ public class CursoDao {
         }
     }
 
-    public Map lista(Map<String, Object> params) {
+    @SuppressWarnings("unchecked")
+	public Map<String, Object> lista(Map<String, Object> params) {
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
         }
@@ -146,7 +148,8 @@ public class CursoDao {
         return resultado;
     }
 
-    public Map<String, Object> listaActivos(Map<String, Object> params, Date hoy) {
+    @SuppressWarnings("unchecked")
+	public Map<String, Object> listaActivos(Map<String, Object> params, Date hoy) {
         log.debug("Obteniendo lista de cursos activos al dia de {}", hoy);
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
@@ -186,7 +189,8 @@ public class CursoDao {
         hibernateTemplate.update(alumnoContenido);
     }
     
-    public List<Examen> obtieneExamenes(Curso curso) {
+    @SuppressWarnings("unchecked")
+	public List<Examen> obtieneExamenes(Curso curso) {
         log.debug("Buscando examenes de {}",curso);
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Examen.class);

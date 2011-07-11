@@ -52,13 +52,13 @@ public class ComunidadUtil {
     }
     
     public static Map<Long, String> obtieneComunidades(ThemeDisplay themeDisplay) throws SystemException, PortalException {
-        List types = new ArrayList();
+        List<Integer> types = new ArrayList<Integer>();
 
         types.add(new Integer(GroupConstants.TYPE_COMMUNITY_OPEN));
         types.add(new Integer(GroupConstants.TYPE_COMMUNITY_RESTRICTED));
         types.add(new Integer(GroupConstants.TYPE_COMMUNITY_PRIVATE));
 
-        LinkedHashMap groupParams = new LinkedHashMap();
+        LinkedHashMap<String, Object> groupParams = new LinkedHashMap<String, Object>();
         groupParams.put("types", types);
         groupParams.put("active", Boolean.TRUE);
 

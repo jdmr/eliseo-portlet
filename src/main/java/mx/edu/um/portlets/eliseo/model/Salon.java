@@ -23,7 +23,11 @@ import javax.persistence.Version;
 @Entity
 @Table(name="salones", uniqueConstraints = {@UniqueConstraint(columnNames={"nombre","curso_id"})})
 public class Salon implements Serializable {
-    @Id
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7443487273041067558L;
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Version

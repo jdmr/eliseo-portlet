@@ -9,7 +9,11 @@ import mx.edu.um.portlets.eliseo.model.Sesion;
  * @author jdmr
  */
 public class SesionVO implements Serializable {
-    private Long id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4893230563169027466L;
+	private Long id;
     private Integer dia;
     private String horaInicial;
     private String horaFinal;

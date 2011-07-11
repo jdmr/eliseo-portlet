@@ -57,7 +57,8 @@ public class SalonDao {
         return ((Long) criteria.list().get(0));
     }
 
-    @Transactional(readOnly = true)
+    @SuppressWarnings("unchecked")
+	@Transactional(readOnly = true)
     public List<Salon> busca(Map<String, Object> params) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Salon.class);
@@ -104,7 +105,8 @@ public class SalonDao {
         hibernateTemplate.delete(hibernateTemplate.load(Salon.class, id));
     }
 
-    public Map lista(Map<String, Object> params) {
+    @SuppressWarnings("unchecked")
+	public Map<String, Object> lista(Map<String, Object> params) {
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
         }
@@ -132,7 +134,8 @@ public class SalonDao {
         hibernateTemplate.delete(hibernateTemplate.load(Sesion.class, id));
     }
     
-    public List<Sesion> obtieneSesiones(Salon salon) {
+    @SuppressWarnings("unchecked")
+	public List<Sesion> obtieneSesiones(Salon salon) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Query query = session.createQuery("select sesion from Sesion sesion where sesion.salon.id = :salonId");
         query.setParameter("salonId", salon.getId());
@@ -145,7 +148,8 @@ public class SalonDao {
         hibernateTemplate.save(alumnoInscrito);
     }
     
-    public List<AlumnoInscrito> getAlumnos(Salon salon) {
+    @SuppressWarnings("unchecked")
+	public List<AlumnoInscrito> getAlumnos(Salon salon) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Query query = session.createQuery("select alumno from AlumnoInscrito alumno where alumno.salon.id = :salonId");
         query.setParameter("salonId", salon.getId());

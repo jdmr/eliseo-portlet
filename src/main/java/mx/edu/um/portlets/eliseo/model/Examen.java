@@ -1,11 +1,15 @@
 package mx.edu.um.portlets.eliseo.model;
 
-import mx.edu.um.portlets.eliseo.model.Curso;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -29,6 +33,13 @@ public class Examen {
     private String nombre;
     @ManyToOne
     private Curso curso;
+    @ManyToMany
+    @JoinTable(
+            name="examen_pregunta",
+            joinColumns=@JoinColumn(name="examen_id"),
+            inverseJoinColumns=@JoinColumn(name="pregunta_id")
+    )
+    private Set<Pregunta> preguntas = new HashSet<Pregunta>();
     
     public Examen() {}
 
@@ -108,6 +119,18 @@ public class Examen {
     
     public String getTitle() {
         return nombre;
+    }
+
+    public Set<Pregunta> getPreguntas() {
+        return preguntas;
+    }
+
+    public void setPreguntas(Set<Pregunta> preguntas) {
+        this.preguntas = preguntas;
+    }
+    
+    public void addPregunta(Pregunta pregunta) {
+        this.preguntas.add(pregunta);
     }
 
     @Override

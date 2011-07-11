@@ -15,6 +15,10 @@
         <portlet:param name="action" value="eliminaExamen" />
         <portlet:param name="examenId" value="${examen.id}" />
     </portlet:actionURL>
+    <portlet:renderURL var="nuevaPregunta" >
+        <portlet:param name="action" value="nuevaPregunta" />
+        <portlet:param name="examenId" value="${examen.id}" />
+    </portlet:renderURL>
 
     <div class="dialog">
         <table>
@@ -38,7 +42,31 @@
             </tbody>
         </table>
     </div>
+    <div class="list">
+        <table>
+            <tbody>
+                <c:forEach items="${preguntas}" var="pregunta">
+				    <portlet:renderURL var="editaPregunta" >
+				        <portlet:param name="action" value="editaPregunta" />
+				        <portlet:param name="examenId" value="${examen.id}" />
+				        <portlet:param name="preguntaId" value="${pregunta.id}" />
+				    </portlet:renderURL>
+				    <portlet:actionURL var="eliminaPregunta" >
+				        <portlet:param name="action" value="eliminaPregunta" />
+				        <portlet:param name="examenId" value="${examen.id}" />
+				        <portlet:param name="preguntaId" value="${pregunta.id}" />
+				    </portlet:actionURL>
+                    <tr>
+                        <td>${pregunta.texto}</td>
+                        <td style="width:100px;"><a class="edit" href="${editaPregunta}">EDITAR</a></td>
+                        <td style="width:100px;"><a class="delete" href="${eliminaPregunta}">ELIMINAR</a></td>
+                    </tr>
+                </c:forEach>
+            </tbody>
+        </table>
+    </div>
     <div class="nav">
+        <span class="menuButton"><a class="edit" href="${nuevaPregunta}"><liferay-ui:message key="examen.nuevaPregunta" /></a></span>
         <span class="menuButton"><a class="edit" href="${editaExamen}"><liferay-ui:message key="examen.edita" /></a></span>
         <span class="menuButton"><a class="delete" href="${eliminaExamen}" onclick="return confirm('<%= LanguageUtil.format(pageContext, "examen.elimina.confirmacion",request.getAttribute("examen"),false) %>');"><liferay-ui:message key="examen.elimina" /></a></span>
         <span class="menuButton"><a class="edit" href="${verCurso}"><liferay-ui:message key="curso.ver" /></a></span>

@@ -95,7 +95,7 @@ public class ExamenDaoTest {
         log.debug("Debiera eliminar examen");
         examenDao.elimina(examenId);
         
-        Examen examen = examenDao.obtiene(examenId);
+        examenDao.obtiene(examenId);
         fail("Debe lanzar una excepcion de examen no encontrado");
     }
                 

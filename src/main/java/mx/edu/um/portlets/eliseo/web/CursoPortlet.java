@@ -1,8 +1,42 @@
 package mx.edu.um.portlets.eliseo.web;
 
-import mx.edu.um.portlets.eliseo.utils.CursoValidator;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+
 import mx.edu.um.portlets.eliseo.dao.CursoDao;
+import mx.edu.um.portlets.eliseo.dao.ExamenDao;
 import mx.edu.um.portlets.eliseo.model.Curso;
+import mx.edu.um.portlets.eliseo.model.Examen;
+import mx.edu.um.portlets.eliseo.model.Opcion;
+import mx.edu.um.portlets.eliseo.model.Pregunta;
+import mx.edu.um.portlets.eliseo.model.Respuesta;
+import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
+import mx.edu.um.portlets.eliseo.utils.CursoValidator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.portlet.bind.PortletRequestDataBinder;
+
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -16,8 +50,6 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.model.Role;
-import com.liferay.portal.model.User;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
@@ -40,33 +72,6 @@ import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 import com.liferay.portlet.messageboards.service.MBMessageServiceUtil;
 import com.liferay.util.portlet.PortletRequestUtil;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import mx.edu.um.portlets.eliseo.model.Examen;
-import mx.edu.um.portlets.eliseo.dao.ExamenDao;
-import mx.edu.um.portlets.eliseo.utils.ComunidadUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
-import org.springframework.context.MessageSource;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.support.SessionStatus;
-import org.springframework.web.portlet.bind.PortletRequestDataBinder;
 
 /**
  *
@@ -87,6 +92,9 @@ public class CursoPortlet {
     private Examen examen;
     @Autowired
     private MessageSource messageSource;
+    private Pregunta pregunta;
+    private Respuesta respuesta;
+    private Opcion opcion;
 
     public CursoPortlet() {
         log.info("Nueva instancia del portlet de cursos");
@@ -218,7 +226,6 @@ public class CursoPortlet {
     public String busca(RenderRequest request, Model modelo, @RequestParam("filtro") String filtro) throws PortalException, SystemException {
         log.debug("Buscando curso");
         curso = null;
-        User user = PortalUtil.getUser(request);
         Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
         modelo.addAttribute("cantidad", cursoDao.cantidad(comunidades.keySet()));
         log.debug(filtro);
@@ -237,10 +244,10 @@ public class CursoPortlet {
         log.debug("Ver curso");
         curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
         model.addAttribute("curso", curso);
-        List contenidos = new ArrayList();
+        List<Object> contenidos = new ArrayList<Object>();
         String[] lista = StringUtil.split(curso.getContenidos());
         if (lista != null && lista.length > 0) {
-            contenidos = new ArrayList();
+            contenidos = new ArrayList<Object>();
         }
         for (String contenidoId : lista) {
             if (contenidoId.startsWith("E")) {
@@ -289,8 +296,8 @@ public class CursoPortlet {
 
                 List<AssetEntry> results = AssetEntryServiceUtil.getEntries(assetEntryQuery);
 
-                List disponibles = new ArrayList();
-                List seleccionados = new ArrayList();
+                List<KeyValuePair> disponibles = new ArrayList<KeyValuePair>();
+                List<KeyValuePair> seleccionados = new ArrayList<KeyValuePair>();
 
                 String[] contenidos = StringUtil.split(curso.getContenidos());
                 String contenidoId;
@@ -333,7 +340,7 @@ public class CursoPortlet {
         log.debug("Actualizando contenido");
         log.debug("CursoId: {} | Contenidos: ", new Object[]{id, seleccionados});
         if (seleccionados.length() == 0) {
-            Map params = request.getParameterMap();
+            Map<String, String[]> params = request.getParameterMap();
             String[] contenidoSeleccionado = (String[]) params.get("contenidoSeleccionado");
             seleccionados = StringUtil.merge(contenidoSeleccionado);
         }
@@ -430,7 +437,7 @@ public class CursoPortlet {
         try {
             String cmd = ParamUtil.getString(request, Constants.CMD);
             if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-                MBMessage message = updateMessage(request);
+                updateMessage(request);
             } else if (cmd.equals(Constants.DELETE)) {
                 deleteMessage(request);
             }
@@ -546,8 +553,9 @@ public class CursoPortlet {
     @RequestMapping(params = "action=verExamen")
     public String verExamen(RenderRequest request, @RequestParam("examenId") Long id, Model model) throws PortalException, SystemException {
         log.debug("Ver examen");
-        examen = examenDao.obtiene(id);
+        examen = examenDao.obtieneConPreguntas(id);
         model.addAttribute("examen", examen);
+        model.addAttribute("preguntas", examen.getPreguntas());
 
         return "examen/ver";
     }
@@ -583,4 +591,87 @@ public class CursoPortlet {
         response.setRenderParameter("action", "verExamen");
         response.setRenderParameter("examenId", examen.getId().toString());
     }
+
+    public Opcion getOpcion() {
+        return opcion;
+    }
+
+    public void setOpcion(Opcion opcion) {
+        this.opcion = opcion;
+    }
+
+    public Pregunta getPregunta() {
+        return pregunta;
+    }
+
+    public void setPregunta(Pregunta pregunta) {
+        this.pregunta = pregunta;
+    }
+
+    public Respuesta getRespuesta() {
+        return respuesta;
+    }
+
+    public void setRespuesta(Respuesta respuesta) {
+        this.respuesta = respuesta;
+    }
+    
+    @RequestMapping(params = "action=nuevaPregunta")
+    public String nuevaPregunta(RenderRequest request, @RequestParam("examenId") Long id, Model model) throws SystemException, PortalException {
+        log.debug("Nueva pregunta");
+        examen = examenDao.obtiene(id);
+        pregunta = new Pregunta();
+        model.addAttribute("examen", examen);
+        model.addAttribute("pregunta", pregunta);
+        return "pregunta/nueva";
+    }
+
+    @RequestMapping(params = "action=creaPregunta")
+    public void creaPregunta(ActionRequest request, ActionResponse response,
+            @ModelAttribute("pregunta") Pregunta pregunta, BindingResult result,
+            Model model, SessionStatus sessionStatus, @RequestParam("examenId") Long examenId) throws PortalException, SystemException {
+
+        log.debug("Creando la pregunta");
+        this.pregunta = examenDao.creaPregunta(pregunta, examenId);
+        
+        sessionStatus.isComplete();
+
+        response.setRenderParameter("action", "verExamen");
+        response.setRenderParameter("examenId", examen.getId().toString());
+    }
+
+    @RequestMapping(params = "action=editaPregunta")
+    public String editaPregunta(RenderRequest request, @RequestParam Long examenId, @RequestParam Long preguntaId, Model model) throws SystemException, PortalException {
+        log.debug("Nueva pregunta");
+        examen = examenDao.obtiene(examenId);
+        pregunta = examenDao.obtienePregunta(preguntaId);
+        model.addAttribute("examen", examen);
+        model.addAttribute("pregunta", pregunta);
+        return "pregunta/edita";
+    }
+
+    @RequestMapping(params = "action=actualizaPregunta")
+    public void actualizaPregunta(ActionRequest request, ActionResponse response,
+            @ModelAttribute("pregunta") Pregunta pregunta, BindingResult result,
+            Model model, SessionStatus sessionStatus, @RequestParam Long examenId) throws PortalException, SystemException {
+
+        log.debug("Creando la pregunta");
+        pregunta = examenDao.actualizaPregunta(pregunta);
+
+        response.setRenderParameter("action", "verExamen");
+        response.setRenderParameter("examenId", examenId.toString());
+    }
+
+    @RequestMapping(params = "action=eliminaPregunta")
+    public void eliminaPregunta(ActionRequest request, ActionResponse response,
+            @ModelAttribute("pregunta") Pregunta pregunta, BindingResult result,
+            Model model, SessionStatus sessionStatus, @RequestParam Long examenId, @RequestParam Long preguntaId) throws PortalException, SystemException {
+
+        log.debug("Eliminando la pregunta");
+        examenDao.eliminaPregunta(preguntaId);
+
+        response.setRenderParameter("action", "verExamen");
+        response.setRenderParameter("examenId", examenId.toString());
+    }
+
 }

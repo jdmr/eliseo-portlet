@@ -104,7 +104,7 @@ public class SalonDaoTest {
         log.debug("Debiera eliminar salon");
         salonDao.elimina(salonId);
         
-        Salon salon = salonDao.obtiene(salonId);
+        salonDao.obtiene(salonId);
         fail("Debe lanzar una excepcion de examen no encontrado");
     }
 }

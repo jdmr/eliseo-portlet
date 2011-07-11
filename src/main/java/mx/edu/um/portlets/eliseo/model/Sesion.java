@@ -19,7 +19,11 @@ import javax.persistence.Version;
 @Entity
 @Table(name="sesiones")
 public class Sesion implements Serializable {
-    @Id
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6065770646229375376L;
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Version
