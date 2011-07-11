@@ -21,9 +21,8 @@ import javax.persistence.Version;
 @NamedQuery(name = "buscaPorFiltro", query = "select c from Curso c where upper(c.codigo) like :filtro or upper(c.nombre) like :filtro")
 public class Curso implements Serializable {
 
-	private static final long serialVersionUID = -7693918750910761286L;
-	
-	@Id
+    private static final long serialVersionUID = -7693918750910761286L;
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Version
