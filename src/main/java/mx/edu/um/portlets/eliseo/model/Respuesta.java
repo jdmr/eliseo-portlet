@@ -15,14 +15,14 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name = "respuestas")
+@Table(name = "eliseo_respuestas")
 public class Respuesta implements Serializable {
 
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = -2218665551226399333L;
-	@Id
+     * 
+     */
+    private static final long serialVersionUID = -2218665551226399333L;
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Version

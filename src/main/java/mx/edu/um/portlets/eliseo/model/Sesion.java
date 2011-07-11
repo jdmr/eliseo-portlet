@@ -17,28 +17,30 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name="sesiones")
+@Table(name = "eliseo_sesiones")
 public class Sesion implements Serializable {
+
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = -6065770646229375376L;
-	@Id
+     * 
+     */
+    private static final long serialVersionUID = -6065770646229375376L;
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Version
     private Integer version;
     private Integer dia;
     @Temporal(javax.persistence.TemporalType.TIME)
-    @Column(name="hora_inicial")
+    @Column(name = "hora_inicial")
     private Date horaInicial;
     @Temporal(javax.persistence.TemporalType.TIME)
-    @Column(name="hora_final")
+    @Column(name = "hora_final")
     private Date horaFinal;
     @ManyToOne
     private Salon salon;
 
-    public Sesion() {}
+    public Sesion() {
+    }
 
     /**
      * @return the id
@@ -150,5 +152,4 @@ public class Sesion implements Serializable {
     public String toString() {
         return "Sesion{" + "dia=" + dia + ", horaInicial=" + horaInicial + ", horaFinal=" + horaFinal + ", salon=" + salon + '}';
     }
-    
 }

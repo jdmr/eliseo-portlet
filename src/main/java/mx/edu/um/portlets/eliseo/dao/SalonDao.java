@@ -2,7 +2,7 @@ package mx.edu.um.portlets.eliseo.dao;
 
 import mx.edu.um.portlets.eliseo.model.Sesion;
 import mx.edu.um.portlets.eliseo.model.Salon;
-import mx.edu.um.portlets.eliseo.model.AlumnoInscrito;
+import mx.edu.um.portlets.eliseo.model.Alumno;
 import com.liferay.portal.model.User;
 import java.util.Date;
 import java.util.List;
@@ -144,12 +144,12 @@ public class SalonDao {
     
     public void agregaAlumno(Salon salon, User alumno) {
         log.info("Agregando al alumno {} al salon {}", alumno, salon);
-        AlumnoInscrito alumnoInscrito = new AlumnoInscrito(alumno, salon);
+        Alumno alumnoInscrito = new Alumno(alumno, salon);
         hibernateTemplate.save(alumnoInscrito);
     }
     
     @SuppressWarnings("unchecked")
-	public List<AlumnoInscrito> getAlumnos(Salon salon) {
+	public List<Alumno> getAlumnos(Salon salon) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Query query = session.createQuery("select alumno from AlumnoInscrito alumno where alumno.salon.id = :salonId");
         query.setParameter("salonId", salon.getId());
@@ -165,7 +165,7 @@ public class SalonDao {
     }
 
     public Long eliminaAlumno(Long alumnoId) {
-        AlumnoInscrito alumno = hibernateTemplate.get(AlumnoInscrito.class, alumnoId);
+        Alumno alumno = hibernateTemplate.get(Alumno.class, alumnoId);
         Long salonId = alumno.getSalon().getId();
         hibernateTemplate.delete(alumno);
         return salonId;
@@ -177,7 +177,7 @@ public class SalonDao {
         Query query = session.createQuery("select alumno from AlumnoInscrito alumno where alumno.salon.id = :salonId and alumno.alumnoId = :alumnoId");
         query.setParameter("salonId", salonId);
         query.setParameter("alumnoId", alumnoId);
-        AlumnoInscrito alumno = (AlumnoInscrito)query.uniqueResult();
+        Alumno alumno = (Alumno)query.uniqueResult();
         if (alumno != null) {
             resultado = true;
         }

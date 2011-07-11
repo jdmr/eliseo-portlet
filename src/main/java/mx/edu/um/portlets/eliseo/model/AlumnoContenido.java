@@ -16,7 +16,7 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name = "alumno_contenido", uniqueConstraints = {
+@Table(name = "eliseo_alumno_contenido", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"alumno_id", "contenido_id"})})
 public class AlumnoContenido {
     @Id

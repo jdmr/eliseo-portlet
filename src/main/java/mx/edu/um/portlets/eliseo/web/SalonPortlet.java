@@ -28,7 +28,7 @@ import javax.portlet.ActionResponse;
 import javax.portlet.RenderRequest;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
-import mx.edu.um.portlets.eliseo.model.AlumnoInscrito;
+import mx.edu.um.portlets.eliseo.model.Alumno;
 import mx.edu.um.portlets.eliseo.model.Curso;
 import mx.edu.um.portlets.eliseo.dao.CursoDao;
 import mx.edu.um.portlets.eliseo.model.Salon;
@@ -420,7 +420,7 @@ public class SalonPortlet {
         log.debug("Mostrando alumnos de salon {}", salonId);
         salon = salonDao.obtiene(salonId);
 
-        List<AlumnoInscrito> alumnos = salonDao.getAlumnos(salon);
+        List<Alumno> alumnos = salonDao.getAlumnos(salon);
 
         model.addAttribute("salon", salon);
         model.addAttribute("alumnos", alumnos);
@@ -460,7 +460,7 @@ public class SalonPortlet {
         User user = UserLocalServiceUtil.getUser(alumnoId);
         salon = salonDao.obtiene(salonId);
         salonDao.agregaAlumno(salon, user);
-        List<AlumnoInscrito> alumnos = salonDao.getAlumnos(salon);
+        List<Alumno> alumnos = salonDao.getAlumnos(salon);
 
         sb.append("<table><thead><tr>");
         sb.append("<th>");
@@ -470,7 +470,7 @@ public class SalonPortlet {
         sb.append("</th><th>").append(messageSource.getMessage("acciones", null, themeDisplay.getLocale())).append("</th>");
         sb.append("</tr></thead>");
         sb.append("<tbody>");
-        for (AlumnoInscrito alumno : alumnos) {
+        for (Alumno alumno : alumnos) {
             String nuevaUrl = url + "&_Salones_WAR_eliseoportlet_alumnoId=" + alumno.getId();
             sb.append("<tr><td>");
             sb.append(alumno.getNombreCompleto());

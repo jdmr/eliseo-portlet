@@ -16,7 +16,7 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name = "cursos", uniqueConstraints = {
+@Table(name = "eliseo_cursos", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"codigo", "comunidad_id"})})
 @NamedQuery(name = "buscaPorFiltro", query = "select c from Curso c where upper(c.codigo) like :filtro or upper(c.nombre) like :filtro")
 public class Curso implements Serializable {

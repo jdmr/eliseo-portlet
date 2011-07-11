@@ -20,8 +20,10 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name="examenes", uniqueConstraints = {@UniqueConstraint(columnNames={"codigo","curso_id"})})
+@Table(name = "eliseo_examenes", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"codigo", "curso_id"})})
 public class Examen {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,14 +36,15 @@ public class Examen {
     @ManyToOne
     private Curso curso;
     @ManyToMany
-    @JoinTable(
-            name="examen_pregunta",
-            joinColumns=@JoinColumn(name="examen_id"),
-            inverseJoinColumns=@JoinColumn(name="pregunta_id")
-    )
-    private Set<Pregunta> preguntas = new HashSet<Pregunta>();
-    
-    public Examen() {}
+    @JoinTable(name = "examen_pregunta",
+    joinColumns =
+    @JoinColumn(name = "examen_id"),
+    inverseJoinColumns =
+    @JoinColumn(name = "pregunta_id"))
+    private Set<Pregunta> preguntas = new HashSet<>();
+
+    public Examen() {
+    }
 
     /**
      * @return the id
@@ -112,11 +115,11 @@ public class Examen {
     public void setCurso(Curso curso) {
         this.curso = curso;
     }
-    
+
     public Long getPrimaryKey() {
         return id;
     }
-    
+
     public String getTitle() {
         return nombre;
     }
@@ -128,7 +131,7 @@ public class Examen {
     public void setPreguntas(Set<Pregunta> preguntas) {
         this.preguntas = preguntas;
     }
-    
+
     public void addPregunta(Pregunta pregunta) {
         this.preguntas.add(pregunta);
     }
@@ -159,6 +162,4 @@ public class Examen {
     public String toString() {
         return nombre;
     }
-    
-    
 }

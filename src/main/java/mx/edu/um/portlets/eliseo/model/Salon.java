@@ -21,13 +21,15 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name="salones", uniqueConstraints = {@UniqueConstraint(columnNames={"nombre","curso_id"})})
+@Table(name = "eliseo_salones", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"nombre", "curso_id"})})
 public class Salon implements Serializable {
+
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = 7443487273041067558L;
-	@Id
+     * 
+     */
+    private static final long serialVersionUID = 7443487273041067558L;
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Version
@@ -36,21 +38,22 @@ public class Salon implements Serializable {
     private String nombre;
     @ManyToOne
     private Curso curso;
-    @Column(name="maestro_id")
+    @Column(name = "maestro_id")
     private Long maestroId;
-    @Column(name="maestro_nombre")
+    @Column(name = "maestro_nombre")
     private String maestroNombre;
     @Temporal(javax.persistence.TemporalType.DATE)
     private Date inicia;
     @Temporal(javax.persistence.TemporalType.DATE)
     private Date termina;
-    @OneToMany(mappedBy="salon")
+    @OneToMany(mappedBy = "salon")
     private Set<Sesion> sesiones;
-    @OneToMany(mappedBy="salon")
-    private Set<AlumnoInscrito> alumnos;
+    @OneToMany(mappedBy = "salon")
+    private Set<Alumno> alumnos;
     private String url;
-    
-    public Salon() {}
+
+    public Salon() {
+    }
 
     /**
      * @return the id
@@ -154,11 +157,11 @@ public class Salon implements Serializable {
         this.sesiones = sesiones;
     }
 
-    public Set<AlumnoInscrito> getAlumnos() {
+    public Set<Alumno> getAlumnos() {
         return alumnos;
     }
 
-    public void setAlumnos(Set<AlumnoInscrito> alumnos) {
+    public void setAlumnos(Set<Alumno> alumnos) {
         this.alumnos = alumnos;
     }
 
@@ -196,5 +199,4 @@ public class Salon implements Serializable {
     public String toString() {
         return "Salon{" + "nombre=" + nombre + ", curso=" + curso + ", maestroNombre=" + maestroNombre + '}';
     }
-    
 }

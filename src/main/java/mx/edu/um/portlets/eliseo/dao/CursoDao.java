@@ -11,6 +11,7 @@ import mx.edu.um.portlets.eliseo.model.Examen;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -44,21 +45,20 @@ public class CursoDao {
     @Transactional(readOnly = true)
     public Long cantidad(Set<Long> comunidades) {
         log.debug("Obteniendo cantidad de cursos");
-        Session session = hibernateTemplate.getSessionFactory().openSession();
-        Criteria criteria = session.createCriteria(Curso.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(Curso.class);
         if (comunidades != null) {
             criteria.add(Restrictions.in("comunidadId", comunidades));
         } else {
             throw new RuntimeException("Se requiere saber la comunidad para hacer el conteo de cursos");
         }
         criteria.setProjection(Projections.rowCount());
-        return ((Long) criteria.list().get(0));
+        List resultados = hibernateTemplate.findByCriteria(criteria);
+        return ((Long) resultados.get(0));
     }
 
     @Transactional(readOnly = true)
     public List<Curso> busca(Map<String, Object> params) {
-        Session session = hibernateTemplate.getSessionFactory().openSession();
-        Criteria criteria = session.createCriteria(Curso.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(Curso.class);
         if (params != null && params.containsKey("filtro") && ((String) params.get("filtro")).trim().length() > 0) {
             String filtro = "%" + ((String) params.get("filtro")).trim() + "%";
             log.debug("Buscando cursos por {}", filtro);
@@ -73,7 +73,8 @@ public class CursoDao {
         } else {
             throw new RuntimeException("Se requiere la comunidad para hacer la busqueda");
         }
-        return criteria.list();
+        List<Curso> resultados = hibernateTemplate.findByCriteria(criteria);
+        return resultados;
     }
 
     public Curso crea(Curso curso) {
@@ -115,24 +116,23 @@ public class CursoDao {
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
         }
-        Session session = hibernateTemplate.getSessionFactory().openSession();
-        Criteria criteria = session.createCriteria(Curso.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(Curso.class);
+//        Session session = hibernateTemplate.getSessionFactory().openSession();
+//        Criteria criteria = session.createCriteria(Curso.class);
         if (params != null && params.containsKey("comunidades")) {
             criteria.add(Restrictions.in("comunidadId", (Set<Long>) params.get("comunidades")));
         } else {
             throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
-        criteria.setMaxResults((Integer) params.get("max"));
-        criteria.setFirstResult((Integer) params.get("offset"));
-        params.put("cursos", criteria.list());
+        List resultados = hibernateTemplate.findByCriteria(criteria,(Integer) params.get("offset"),(Integer) params.get("max"));
+        params.put("cursos", resultados);
         return params;
     }
 
     public Long cantidadActiva(Set<Long> comunidades, Date hoy) {
         log.debug("Obteniendo cantidad de cursos activos");
         log.debug("Params: {} ||| {}", comunidades, hoy);
-        Session session = hibernateTemplate.getSessionFactory().openSession();
-        Criteria criteria = session.createCriteria(Salon.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(Salon.class);
         criteria.add(Restrictions.le("inicia", hoy));
         criteria.add(Restrictions.ge("termina", hoy));
         if (comunidades != null) {
@@ -141,7 +141,8 @@ public class CursoDao {
             throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
         criteria.setProjection(Projections.rowCount());
-        Long resultado = (Long) criteria.list().get(0);
+        List resultados = hibernateTemplate.findByCriteria(criteria);
+        Long resultado = (Long) resultados.get(0);
         log.debug("El resultado: {}", resultado);
         return resultado;
     }
@@ -151,8 +152,7 @@ public class CursoDao {
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
         }
-        Session session = hibernateTemplate.getSessionFactory().openSession();
-        Criteria criteria = session.createCriteria(Salon.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(Salon.class);
         criteria.add(Restrictions.le("inicia", hoy));
         criteria.add(Restrictions.ge("termina", hoy));
         if (params != null && params.containsKey("comunidades")) {
@@ -160,20 +160,18 @@ public class CursoDao {
         } else {
             throw new RuntimeException("No puede buscar cursos sin definir de que comunidad");
         }
-        criteria.setMaxResults((Integer) params.get("max"));
-        criteria.setFirstResult((Integer) params.get("offset"));
-        List<Salon> salones = criteria.list();
+        List<Salon> salones = hibernateTemplate.findByCriteria(criteria,(Integer) params.get("offset"),(Integer) params.get("max"));
         params.put("salones", salones);
         return params;
     }
 
     public AlumnoContenido buscaAlumnoContenido(Long alumnoId, Long contenidoId) {
         log.debug("Buscando relacion alumno {} contenido {}", alumnoId, contenidoId);
-        Session session = hibernateTemplate.getSessionFactory().openSession();
-        Criteria criteria = session.createCriteria(AlumnoContenido.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(AlumnoContenido.class);
         criteria.add(Restrictions.eq("alumnoId", alumnoId));
         criteria.add(Restrictions.eq("contenidoId", contenidoId));
-        return (AlumnoContenido) criteria.uniqueResult();
+        List<AlumnoContenido> resultados = hibernateTemplate.findByCriteria(criteria, 0, 1);
+        return resultados.get(0);
     }
 
     public void creaAlumnoContenido(AlumnoContenido alumnoContenido) {
@@ -188,9 +186,8 @@ public class CursoDao {
 
     public List<Examen> obtieneExamenes(Curso curso) {
         log.debug("Buscando examenes de {}", curso);
-        Session session = hibernateTemplate.getSessionFactory().openSession();
-        Criteria criteria = session.createCriteria(Examen.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(Examen.class);
         criteria.add(Restrictions.eq("curso", curso));
-        return criteria.list();
+        return hibernateTemplate.findByCriteria(criteria);
     }
 }

@@ -35,6 +35,26 @@
                         </td>
                     </tr>
 
+                    <tr class="prop">
+                        <td valign="top" class="name">
+                            <label for="esMultiple"><liferay-ui:message key="pregunta.esMultiple" /></label>
+                        </td>
+                        <td valign="top" class="value">
+                            <form:checkbox path="esMultiple" />
+                            <form:errors cssClass="errors" path="esMultiple" cssStyle="color:red;" />
+                        </td>
+                    </tr>
+
+                    <tr class="prop">
+                        <td valign="top" class="name">
+                            <label for="puntos"><liferay-ui:message key="pregunta.puntos" /></label>
+                        </td>
+                        <td valign="top" class="value">
+                            <form:input path="puntos" maxlength="10" />
+                            <form:errors cssClass="errors" path="puntos" cssStyle="color:red;" />
+                        </td>
+                    </tr>
+
                 </tbody>
             </table>
         </div>

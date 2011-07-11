@@ -15,20 +15,19 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-
 /**
  *
  * @author jdmr
  */
 @Entity
-@Table(name = "preguntas")
+@Table(name = "eliseo_preguntas")
 public class Pregunta implements Serializable {
 
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = -1191927861654539188L;
-	@Id
+     * 
+     */
+    private static final long serialVersionUID = -1191927861654539188L;
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Version
@@ -37,15 +36,15 @@ public class Pregunta implements Serializable {
     private String texto;
     @Column(nullable = false)
     private Boolean todas = false;
-    @Column(name="es_multiple", nullable = false)
+    @Column(name = "es_multiple", nullable = false)
     private Boolean esMultiple = false;
     @Column(nullable = false)
     private BigDecimal puntos = new BigDecimal("1");
     @OneToMany(mappedBy = "pregunta")
-    private Set<Respuesta> respuestas;
+    private Set<Respuesta> respuestas = new HashSet<>();
     @ManyToMany(mappedBy = "preguntas")
-    private Set<Examen> examenes = new HashSet<Examen>();
-    
+    private Set<Examen> examenes = new HashSet<>();
+
     public Pregunta() {
     }
 
@@ -128,21 +127,21 @@ public class Pregunta implements Serializable {
     }
 
     public BigDecimal getPuntos() {
-		return puntos;
-	}
+        return puntos;
+    }
 
-	public void setPuntos(BigDecimal puntos) {
-		this.puntos = puntos;
-	}
+    public void setPuntos(BigDecimal puntos) {
+        this.puntos = puntos;
+    }
 
-	public Set<Examen> getExamenes() {
+    public Set<Examen> getExamenes() {
         return examenes;
     }
 
     public void setExamenes(Set<Examen> examenes) {
         this.examenes = examenes;
     }
-    
+
     public void addExamen(Examen examen) {
         this.examenes.add(examen);
     }

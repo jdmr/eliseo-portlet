@@ -4,4 +4,8 @@ drop table if exists examenes cascade;
 drop table if exists salones cascade;
 drop table if exists sesiones cascade;
 drop table if exists alumnos cascade;
+drop table if exists alumno_contenido cascade;
+drop table if exists opciones cascade;
+drop table if exists preguntas cascade;
+drop table if exists respuestas cascade;
 commit;
