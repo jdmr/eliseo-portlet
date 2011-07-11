@@ -141,7 +141,7 @@ public class CursoPortlet {
                 offset = offset - max;
             }
 
-            Map<String, Object> params = new HashMap<String, Object>();
+            Map<String, Object> params = new HashMap<>();
             params.put("max", max);
             params.put("offset", offset);
             params.put("comunidades", comunidades.keySet());
@@ -229,7 +229,7 @@ public class CursoPortlet {
         Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
         modelo.addAttribute("cantidad", cursoDao.cantidad(comunidades.keySet()));
         log.debug(filtro);
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("filtro", filtro);
         params.put("comunidades", comunidades.keySet());
         List<Curso> cursos = cursoDao.busca(params);
@@ -244,10 +244,10 @@ public class CursoPortlet {
         log.debug("Ver curso");
         curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
         model.addAttribute("curso", curso);
-        List<Object> contenidos = new ArrayList<Object>();
+        List<Object> contenidos = new ArrayList<>();
         String[] lista = StringUtil.split(curso.getContenidos());
         if (lista != null && lista.length > 0) {
-            contenidos = new ArrayList<Object>();
+            contenidos = new ArrayList<>();
         }
         for (String contenidoId : lista) {
             if (contenidoId.startsWith("E")) {
@@ -296,8 +296,8 @@ public class CursoPortlet {
 
                 List<AssetEntry> results = AssetEntryServiceUtil.getEntries(assetEntryQuery);
 
-                List<KeyValuePair> disponibles = new ArrayList<KeyValuePair>();
-                List<KeyValuePair> seleccionados = new ArrayList<KeyValuePair>();
+                List<KeyValuePair> disponibles = new ArrayList<>();
+                List<KeyValuePair> seleccionados = new ArrayList<>();
 
                 String[] contenidos = StringUtil.split(curso.getContenidos());
                 String contenidoId;
@@ -325,7 +325,7 @@ public class CursoPortlet {
             }
 
 
-        } catch (Exception e) {
+        } catch (PortalException | SystemException e) {
             log.error("No se pudo cargar el contenido", e);
             throw new RuntimeException("No se pudo cargar el contenido", e);
         }
@@ -420,7 +420,7 @@ public class CursoPortlet {
                     model.addAttribute("discussionMessages", true);
                 }
             }
-        } catch (Exception e) {
+        } catch (PortalException | SystemException e) {
             log.error("Error al traer el contenido", e);
         }
 
@@ -436,10 +436,14 @@ public class CursoPortlet {
 
         try {
             String cmd = ParamUtil.getString(request, Constants.CMD);
-            if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-                updateMessage(request);
-            } else if (cmd.equals(Constants.DELETE)) {
-                deleteMessage(request);
+            switch (cmd) {
+                case Constants.ADD:
+                case Constants.UPDATE:
+                    updateMessage(request);
+                    break;
+                case Constants.DELETE:
+                    deleteMessage(request);
+                    break;
             }
         } catch (Exception e) {
             log.error("Error al intentar actualizar el mensaje", e);

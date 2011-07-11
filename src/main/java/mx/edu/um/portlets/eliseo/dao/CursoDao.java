@@ -55,8 +55,7 @@ public class CursoDao {
         return ((Long) criteria.list().get(0));
     }
 
-    @SuppressWarnings("unchecked")
-	@Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<Curso> busca(Map<String, Object> params) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Curso.class);
@@ -112,8 +111,7 @@ public class CursoDao {
         }
     }
 
-    @SuppressWarnings("unchecked")
-	public Map<String, Object> lista(Map<String, Object> params) {
+    public Map<String, Object> lista(Map<String, Object> params) {
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
         }
@@ -148,8 +146,7 @@ public class CursoDao {
         return resultado;
     }
 
-    @SuppressWarnings("unchecked")
-	public Map<String, Object> listaActivos(Map<String, Object> params, Date hoy) {
+    public Map<String, Object> listaActivos(Map<String, Object> params, Date hoy) {
         log.debug("Obteniendo lista de cursos activos al dia de {}", hoy);
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
@@ -178,7 +175,7 @@ public class CursoDao {
         criteria.add(Restrictions.eq("contenidoId", contenidoId));
         return (AlumnoContenido) criteria.uniqueResult();
     }
-    
+
     public void creaAlumnoContenido(AlumnoContenido alumnoContenido) {
         log.debug("Creando nuevo registro de alumno-contenido {}-{}", alumnoContenido.getAlumnoId(), alumnoContenido.getContenidoId());
         hibernateTemplate.save(alumnoContenido);
@@ -188,10 +185,9 @@ public class CursoDao {
         log.debug("Actualizando registro de alumno-contenido {}-{}", alumnoContenido.getAlumnoId(), alumnoContenido.getContenidoId());
         hibernateTemplate.update(alumnoContenido);
     }
-    
-    @SuppressWarnings("unchecked")
-	public List<Examen> obtieneExamenes(Curso curso) {
-        log.debug("Buscando examenes de {}",curso);
+
+    public List<Examen> obtieneExamenes(Curso curso) {
+        log.debug("Buscando examenes de {}", curso);
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Examen.class);
         criteria.add(Restrictions.eq("curso", curso));
