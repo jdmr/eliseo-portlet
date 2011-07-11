@@ -18,9 +18,9 @@ import javax.persistence.Version;
  * @author jdmr
  */
 @Entity
-@Table(name = "alumnos", uniqueConstraints = {
+@Table(name = "eliseo_alumnos", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"alumno_id", "salon_id"})})
-public class AlumnoInscrito {
+public class Alumno {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,10 +41,10 @@ public class AlumnoInscrito {
     @Column(nullable = false)
     private Date fecha;
 
-    public AlumnoInscrito() {
+    public Alumno() {
     }
 
-    public AlumnoInscrito(User alumno, Salon salon) {
+    public Alumno(User alumno, Salon salon) {
         alumnoId = alumno.getUserId();
         usuario = alumno.getScreenName();
         correo = alumno.getEmailAddress();
