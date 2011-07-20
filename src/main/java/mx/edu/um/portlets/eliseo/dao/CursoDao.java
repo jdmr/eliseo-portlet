@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import mx.edu.um.portlets.eliseo.model.AlumnoContenido;
 import mx.edu.um.portlets.eliseo.model.Examen;
-import org.hibernate.Criteria;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;

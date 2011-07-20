@@ -41,7 +41,7 @@ public class Examen {
     @JoinColumn(name = "examen_id"),
     inverseJoinColumns =
     @JoinColumn(name = "pregunta_id"))
-    private Set<Pregunta> preguntas = new HashSet<>();
+    private Set<Pregunta> preguntas = new HashSet<Pregunta>();
 
     public Examen() {
     }

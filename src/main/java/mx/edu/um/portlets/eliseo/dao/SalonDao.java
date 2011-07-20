@@ -34,7 +34,7 @@ public class SalonDao {
     private HibernateTemplate hibernateTemplate;
 
     public SalonDao() {
-        log.debug("Nueva instancia del dao de salones");
+        log.info("Nueva instancia del dao de salones");
     }
 
     @Autowired

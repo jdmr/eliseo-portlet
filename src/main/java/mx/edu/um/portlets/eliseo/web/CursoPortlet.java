@@ -141,7 +141,7 @@ public class CursoPortlet {
                 offset = offset - max;
             }
 
-            Map<String, Object> params = new HashMap<>();
+            Map<String, Object> params = new HashMap<String, Object>();
             params.put("max", max);
             params.put("offset", offset);
             params.put("comunidades", comunidades.keySet());
@@ -229,7 +229,7 @@ public class CursoPortlet {
         Map<Long, String> comunidades = ComunidadUtil.obtieneComunidades(request);
         modelo.addAttribute("cantidad", cursoDao.cantidad(comunidades.keySet()));
         log.debug(filtro);
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<String, Object>();
         params.put("filtro", filtro);
         params.put("comunidades", comunidades.keySet());
         List<Curso> cursos = cursoDao.busca(params);
@@ -244,10 +244,10 @@ public class CursoPortlet {
         log.debug("Ver curso");
         curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
         model.addAttribute("curso", curso);
-        List<Object> contenidos = new ArrayList<>();
+        List<Object> contenidos = new ArrayList<Object>();
         String[] lista = StringUtil.split(curso.getContenidos());
         if (lista != null && lista.length > 0) {
-            contenidos = new ArrayList<>();
+            contenidos = new ArrayList<Object>();
         }
         for (String contenidoId : lista) {
             if (contenidoId.startsWith("E")) {
@@ -272,15 +272,14 @@ public class CursoPortlet {
     }
 
     @RequestMapping(params = "action=contenido")
-    public String contenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long id, Model model) throws SystemException, PortalException {
+    public String contenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long id, Model model) {
         log.debug("Edita contenido");
-        curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
-        model.addAttribute("curso", curso);
-
-        ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
-
-
         try {
+            curso = cursoDao.obtiene(id, ComunidadUtil.obtieneComunidades(request).keySet());
+            model.addAttribute("curso", curso);
+
+            ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+
             long scopeGroupId = themeDisplay.getScopeGroupId();
 
             AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
@@ -296,8 +295,8 @@ public class CursoPortlet {
 
                 List<AssetEntry> results = AssetEntryServiceUtil.getEntries(assetEntryQuery);
 
-                List<KeyValuePair> disponibles = new ArrayList<>();
-                List<KeyValuePair> seleccionados = new ArrayList<>();
+                List<KeyValuePair> disponibles = new ArrayList<KeyValuePair>();
+                List<KeyValuePair> seleccionados = new ArrayList<KeyValuePair>();
 
                 String[] contenidos = StringUtil.split(curso.getContenidos());
                 String contenidoId;
@@ -325,7 +324,10 @@ public class CursoPortlet {
             }
 
 
-        } catch (PortalException | SystemException e) {
+        } catch (PortalException e) {
+            log.error("No se pudo cargar el contenido", e);
+            throw new RuntimeException("No se pudo cargar el contenido", e);
+        } catch (SystemException e) {
             log.error("No se pudo cargar el contenido", e);
             throw new RuntimeException("No se pudo cargar el contenido", e);
         }
@@ -356,13 +358,14 @@ public class CursoPortlet {
     }
 
     @RequestMapping(params = "action=verContenido")
-    public String verContenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long cursoId, @RequestParam("contenidoId") Long contenidoId, Model model) throws SystemException, PortalException {
+    public String verContenido(RenderRequest request, RenderResponse response, @RequestParam("cursoId") Long cursoId, @RequestParam("contenidoId") Long contenidoId, Model model) {
         log.debug("Ver contenido");
-        curso = cursoDao.obtiene(cursoId, ComunidadUtil.obtieneComunidades(request).keySet());
-        model.addAttribute("curso", curso);
-        model.addAttribute("contenidoId", contenidoId);
-        ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
         try {
+            curso = cursoDao.obtiene(cursoId, ComunidadUtil.obtieneComunidades(request).keySet());
+            model.addAttribute("curso", curso);
+            model.addAttribute("contenidoId", contenidoId);
+            ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+            
             AssetEntry contenido = AssetEntryServiceUtil.getEntry(new Long(contenidoId));
             log.debug("Contenido: " + contenido);
             if (contenido.getClassName().equals(JournalArticle.class.getName())) {
@@ -420,8 +423,12 @@ public class CursoPortlet {
                     model.addAttribute("discussionMessages", true);
                 }
             }
-        } catch (PortalException | SystemException e) {
+        } catch (PortalException e) {
             log.error("Error al traer el contenido", e);
+            throw new RuntimeException("Error al traer el contenido", e);
+        } catch (SystemException e) {
+            log.error("Error al traer el contenido", e);
+            throw new RuntimeException("Error al traer el contenido", e);
         }
 
         return "curso/verContenido";
@@ -436,14 +443,11 @@ public class CursoPortlet {
 
         try {
             String cmd = ParamUtil.getString(request, Constants.CMD);
-            switch (cmd) {
-                case Constants.ADD:
-                case Constants.UPDATE:
-                    updateMessage(request);
-                    break;
-                case Constants.DELETE:
-                    deleteMessage(request);
-                    break;
+            if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
+                updateMessage(request);
+            } else if (cmd.equals(Constants.DELETE)) {
+                deleteMessage(request);
+                
             }
         } catch (Exception e) {
             log.error("Error al intentar actualizar el mensaje", e);

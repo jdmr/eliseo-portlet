@@ -68,8 +68,8 @@
                     </portlet:actionURL>
                     <tr>
                         <td>${pregunta.texto}</td>
-                        <td style="width:100px;"><input type="checkbox" disabled="true" <c:if test="${pregunta.todas}">checked="checked"</c:if> /></td>
-                        <td style="width:120px;"><input type="checkbox" disabled="true" <c:if test="${pregunta.esMultiple}">checked="checked"</c:if> /></td>
+                        <td style="width:140px;"><input type="checkbox" disabled="true" <c:if test="${pregunta.todas}">checked="checked"</c:if> /></td>
+                        <td style="width:140px;"><input type="checkbox" disabled="true" <c:if test="${pregunta.esMultiple}">checked="checked"</c:if> /></td>
                         <td style="width:60px;">${pregunta.puntos}</td>
                         <td style="width:80px;"><a class="edit" href="${editaPregunta}">EDITAR</a></td>
                         <td style="width:80px;"><a class="delete" href="${eliminaPregunta}">ELIMINAR</a></td>

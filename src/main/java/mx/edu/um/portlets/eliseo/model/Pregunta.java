@@ -41,9 +41,9 @@ public class Pregunta implements Serializable {
     @Column(nullable = false)
     private BigDecimal puntos = new BigDecimal("1");
     @OneToMany(mappedBy = "pregunta")
-    private Set<Respuesta> respuestas = new HashSet<>();
+    private Set<Respuesta> respuestas = new HashSet<Respuesta>();
     @ManyToMany(mappedBy = "preguntas")
-    private Set<Examen> examenes = new HashSet<>();
+    private Set<Examen> examenes = new HashSet<Examen>();
 
     public Pregunta() {
     }

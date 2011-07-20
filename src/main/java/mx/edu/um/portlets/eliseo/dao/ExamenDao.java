@@ -32,7 +32,7 @@ public class ExamenDao {
     private HibernateTemplate hibernateTemplate;
 
     public ExamenDao() {
-        log.debug("Nueva instancia del dao de examenes");
+        log.info("Nueva instancia del dao de examenes");
     }
 
     @Autowired
