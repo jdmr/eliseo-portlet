@@ -650,7 +650,7 @@ public class CursoPortlet {
 
     @RequestMapping(params = "action=editaPregunta")
     public String editaPregunta(RenderRequest request, @RequestParam Long examenId, @RequestParam Long preguntaId, Model model) throws SystemException, PortalException {
-        log.debug("Nueva pregunta");
+        log.debug("Edita pregunta");
         examen = examenDao.obtiene(examenId);
         pregunta = examenDao.obtienePregunta(preguntaId);
         model.addAttribute("examen", examen);
@@ -663,7 +663,7 @@ public class CursoPortlet {
             @ModelAttribute("pregunta") Pregunta pregunta, BindingResult result,
             Model model, SessionStatus sessionStatus, @RequestParam Long examenId) throws PortalException, SystemException {
 
-        log.debug("Creando la pregunta");
+        log.debug("Actualizando la pregunta");
         pregunta = examenDao.actualizaPregunta(pregunta);
 
         response.setRenderParameter("action", "verExamen");
@@ -680,6 +680,27 @@ public class CursoPortlet {
 
         response.setRenderParameter("action", "verExamen");
         response.setRenderParameter("examenId", examenId.toString());
+    }
+
+    @RequestMapping(params = "action=nuevaRespuesta")
+    public String nuevaRespuesta(
+            RenderRequest request, 
+            @RequestParam Long examenId, 
+            @RequestParam Long preguntaId, 
+            Model model) throws SystemException, PortalException {
+        log.debug("Nueva respuesta");
+        examen = examenDao.obtiene(examenId);
+        pregunta = examenDao.obtienePregunta(preguntaId);
+        ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+        String texto = messageSource.getMessage("respuesta.default", null, themeDisplay.getLocale());
+        Opcion opcion = examenDao.obtieneOpcion(texto, examen.getCurso().getComunidadId());
+        if (opcion == null) {
+            opcion = new Opcion(texto, examen.getCurso().getComunidadId());
+        }
+        respuesta = new Respuesta();
+        model.addAttribute("examen", examen);
+        model.addAttribute("pregunta", pregunta);
+        return "respuesta/edita";
     }
 
 }

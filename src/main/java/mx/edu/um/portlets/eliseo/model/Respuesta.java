@@ -38,6 +38,11 @@ public class Respuesta implements Serializable {
 
     public Respuesta() {
     }
+    
+    public Respuesta(Pregunta pregunta, Opcion opcion) {
+        this.pregunta = pregunta;
+        this.opcion = opcion;
+    }
 
     /**
      * @return the id

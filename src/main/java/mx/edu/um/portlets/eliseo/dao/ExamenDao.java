@@ -4,6 +4,7 @@ import mx.edu.um.portlets.eliseo.model.Examen;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import mx.edu.um.portlets.eliseo.model.Opcion;
 import mx.edu.um.portlets.eliseo.model.Pregunta;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -53,7 +54,7 @@ public class ExamenDao {
     }
 
     @SuppressWarnings("unchecked")
-	@Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<Examen> busca(Map<String, Object> params) {
         Session session = hibernateTemplate.getSessionFactory().openSession();
         Criteria criteria = session.createCriteria(Examen.class);
@@ -93,14 +94,14 @@ public class ExamenDao {
         }
         return examen;
     }
-    
+
     @Transactional(readOnly = true)
     public Examen obtieneConPreguntas(Long id) {
         log.debug("Buscando el examen {}", id);
         DetachedCriteria criteria = DetachedCriteria.forClass(Examen.class);
         criteria.setFetchMode("preguntas", FetchMode.JOIN);
         @SuppressWarnings("unchecked")
-		List<Examen> resultados = hibernateTemplate.findByCriteria(criteria, 0, 1);
+        List<Examen> resultados = hibernateTemplate.findByCriteria(criteria, 0, 1);
         return resultados.get(0);
     }
 
@@ -110,7 +111,7 @@ public class ExamenDao {
     }
 
     @SuppressWarnings("unchecked")
-	public Map<String, Object> lista(Map<String, Object> params) {
+    public Map<String, Object> lista(Map<String, Object> params) {
         if (params.get("offset") == null) {
             params.put("offset", new Integer(0));
         }
@@ -127,52 +128,67 @@ public class ExamenDao {
 
     public Pregunta creaPregunta(Pregunta pregunta, Long examenId) {
         log.debug("Creando la pregunta {}", pregunta);
-        pregunta.setId((Long)hibernateTemplate.save(pregunta));
-        
+        pregunta.setId((Long) hibernateTemplate.save(pregunta));
+
         DetachedCriteria criteria = DetachedCriteria.forClass(Examen.class);
         criteria.setFetchMode("preguntas", FetchMode.JOIN);
         @SuppressWarnings("unchecked")
-		List<Examen> resultados = hibernateTemplate.findByCriteria(criteria, 0, 1);
+        List<Examen> resultados = hibernateTemplate.findByCriteria(criteria, 0, 1);
         Examen examen = resultados.get(0);
         examen.addPregunta(pregunta);
         hibernateTemplate.update(examen);
-        
+
         return pregunta;
     }
 
     @Transactional(readOnly = true)
-	public Pregunta obtienePregunta(Long preguntaId) {
+    public Pregunta obtienePregunta(Long preguntaId) {
         log.debug("Buscando la pregunta {}", preguntaId);
         Pregunta pregunta = hibernateTemplate.get(Pregunta.class, preguntaId);
         if (pregunta == null) {
             throw new RuntimeException("Pregunta no encontrada");
         }
         return pregunta;
-	}
+    }
 
-	public Pregunta actualizaPregunta(Pregunta pregunta) {
-		Pregunta x = hibernateTemplate.get(Pregunta.class, pregunta.getId());
-		x.setVersion(pregunta.getVersion());
-		x.setTexto(pregunta.getTexto());
-		x.setEsMultiple(pregunta.getEsMultiple());
-		x.setTodas(pregunta.getTodas());
-		x.setPuntos(pregunta.getPuntos());
-		hibernateTemplate.update(x);
-		return x;
-	}
+    public Pregunta actualizaPregunta(Pregunta pregunta) {
+        Pregunta x = hibernateTemplate.get(Pregunta.class, pregunta.getId());
+        x.setVersion(pregunta.getVersion());
+        x.setTexto(pregunta.getTexto());
+        x.setEsMultiple(pregunta.getEsMultiple());
+        x.setTodas(pregunta.getTodas());
+        x.setPuntos(pregunta.getPuntos());
+        hibernateTemplate.update(x);
+        return x;
+    }
 
-	public void eliminaPregunta(Long preguntaId) {
+    public void eliminaPregunta(Long preguntaId) {
         log.info("Eliminando la pregunta {}", preguntaId);
         Pregunta pregunta = hibernateTemplate.load(Pregunta.class, preguntaId);
         DetachedCriteria criteria = DetachedCriteria.forClass(Examen.class);
         criteria.setFetchMode("preguntas", FetchMode.JOIN);
         criteria.createCriteria("preguntas").add(Restrictions.idEq(preguntaId));
-		@SuppressWarnings("unchecked")
-		List<Examen> examenes = hibernateTemplate.findByCriteria(criteria);
-		for(Examen examen : examenes) {
-			examen.getPreguntas().remove(pregunta);
-			hibernateTemplate.update(examen);
-		}
+        @SuppressWarnings("unchecked")
+        List<Examen> examenes = hibernateTemplate.findByCriteria(criteria);
+        for (Examen examen : examenes) {
+            examen.getPreguntas().remove(pregunta);
+            hibernateTemplate.update(examen);
+        }
         hibernateTemplate.delete(pregunta);
-	}
+    }
+
+    public Opcion obtieneOpcion(String texto, Long comunidadId) {
+        log.debug("Buscando la opcion {} de la comunidad {}", texto, comunidadId);
+        
+        DetachedCriteria criteria = DetachedCriteria.forClass(Opcion.class);
+        criteria.add(Restrictions.ilike("texto", texto));
+        criteria.add(Restrictions.eq("comunidadId", comunidadId));
+        List<Opcion> opciones = hibernateTemplate.findByCriteria(criteria, 0, 1);
+        Opcion opcion = null;
+        if (opciones != null && opciones.size() > 0) {
+            opcion = opciones.get(0);
+        }
+        
+        return opcion;
+    }
 }

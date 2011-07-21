@@ -28,8 +28,15 @@ public class Opcion implements Serializable {
     private Integer version;
     @Column(length = 200)
     private String texto;
+    @Column(name = "comunidad_id", nullable = false)
+    private Long comunidadId;
 
     public Opcion() {
+    }
+    
+    public Opcion(String texto, Long comunidadId) {
+        this.texto = texto;
+        this.comunidadId = comunidadId;
     }
 
     /**
@@ -72,6 +79,14 @@ public class Opcion implements Serializable {
      */
     public void setTexto(String texto) {
         this.texto = texto;
+    }
+
+    public Long getComunidadId() {
+        return comunidadId;
+    }
+
+    public void setComunidadId(Long comunidadId) {
+        this.comunidadId = comunidadId;
     }
 
     @Override

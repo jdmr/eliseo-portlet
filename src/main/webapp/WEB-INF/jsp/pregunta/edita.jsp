@@ -62,8 +62,14 @@
             <portlet:param name="action" value="verExamen" />
             <portlet:param name="examenId" value="${examen.id}" />
         </portlet:renderURL>
+        <portlet:renderURL var="nuevaRespuesta" >
+            <portlet:param name="action" value="nuevaRespuesta" />
+            <portlet:param name="examenId" value="${examen.id}" />
+            <portlet:param name="preguntaId" value="${pregunta.id}" />
+        </portlet:renderURL>
         <div class="nav">
             <span class="menuButton"><input type="submit" name="<portlet:namespace />_crea" class="save" value="<liferay-ui:message key='pregunta.actualiza' />"/></span>
+            <span class="menuButton"><a class="create" href="${nuevaRespuesta}"><liferay-ui:message key="respuesta.nueva" /></a></span>
             <span class="menuButton"><a class="cancel" href="${verExamen}"><liferay-ui:message key="pregunta.cancela" /></a></span>
         </div>
     </form:form>
