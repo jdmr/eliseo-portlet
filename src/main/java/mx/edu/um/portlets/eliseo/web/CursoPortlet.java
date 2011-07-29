@@ -693,13 +693,14 @@ public class CursoPortlet {
         pregunta = examenDao.obtienePregunta(preguntaId);
         ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
         String texto = messageSource.getMessage("respuesta.default", null, themeDisplay.getLocale());
-        Opcion opcion = examenDao.obtieneOpcion(texto, examen.getCurso().getComunidadId());
+        opcion = examenDao.obtieneOpcion(texto, examen.getCurso().getComunidadId());
         if (opcion == null) {
             opcion = new Opcion(texto, examen.getCurso().getComunidadId());
         }
-        respuesta = new Respuesta();
+        respuesta = new Respuesta(pregunta, opcion);
         model.addAttribute("examen", examen);
         model.addAttribute("pregunta", pregunta);
+        model.addAttribute("respuesta", respuesta);
         return "respuesta/edita";
     }
 
