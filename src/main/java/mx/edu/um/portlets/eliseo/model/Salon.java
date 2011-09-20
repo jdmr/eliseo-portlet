@@ -1,6 +1,5 @@
 package mx.edu.um.portlets.eliseo.model;
 
-import mx.edu.um.portlets.eliseo.model.Curso;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -125,54 +124,90 @@ public class Salon implements Serializable {
         this.maestroId = maestroId;
     }
 
+    /**
+     * @return the maestroNombre
+     */
     public String getMaestroNombre() {
         return maestroNombre;
     }
 
+    /**
+     * @param maestroNombre the maestroNombre to set
+     */
     public void setMaestroNombre(String maestroNombre) {
         this.maestroNombre = maestroNombre;
     }
 
+    /**
+     * @return the inicia
+     */
     public Date getInicia() {
         return inicia;
     }
 
+    /**
+     * @param inicia the inicia to set
+     */
     public void setInicia(Date inicia) {
         this.inicia = inicia;
     }
 
+    /**
+     * @return the termina
+     */
     public Date getTermina() {
         return termina;
     }
 
+    /**
+     * @param termina the termina to set
+     */
     public void setTermina(Date termina) {
         this.termina = termina;
     }
 
+    /**
+     * @return the sesiones
+     */
     public Set<Sesion> getSesiones() {
         return sesiones;
     }
 
+    /**
+     * @param sesiones the sesiones to set
+     */
     public void setSesiones(Set<Sesion> sesiones) {
         this.sesiones = sesiones;
     }
 
+    /**
+     * @return the alumnos
+     */
     public Set<Alumno> getAlumnos() {
         return alumnos;
     }
 
+    /**
+     * @param alumnos the alumnos to set
+     */
     public void setAlumnos(Set<Alumno> alumnos) {
         this.alumnos = alumnos;
     }
 
+    /**
+     * @return the url
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * @param url the url to set
+     */
     public void setUrl(String url) {
         this.url = url;
     }
-
+    
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -182,7 +217,7 @@ public class Salon implements Serializable {
             return false;
         }
         final Salon other = (Salon) obj;
-        if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
+        if (this.getId() != other.getId() && (this.getId() == null || !this.id.equals(other.id))) {
             return false;
         }
         return true;
@@ -191,12 +226,13 @@ public class Salon implements Serializable {
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 67 * hash + (this.id != null ? this.id.hashCode() : 0);
+        hash = 67 * hash + (this.getId() != null ? this.getId().hashCode() : 0);
         return hash;
     }
 
     @Override
     public String toString() {
-        return "Salon{" + "nombre=" + nombre + ", curso=" + curso + ", maestroNombre=" + maestroNombre + '}';
+        return "Salon{" + "nombre=" + getNombre() + ", curso=" + getCurso() + ", maestroNombre=" + getMaestroNombre() + '}';
     }
+
 }
